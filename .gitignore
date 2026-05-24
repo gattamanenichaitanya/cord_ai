@@ -1,0 +1,14 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+
+# Ignore auth state files but keep directory tracked
+.auth/*
+!.auth/.gitkeep
+
+# Ignore Chroma DB contents
+graph_db/chroma/
+
+# Ignore generated screenshots but keep directory tracked
+screenshots/*.png
