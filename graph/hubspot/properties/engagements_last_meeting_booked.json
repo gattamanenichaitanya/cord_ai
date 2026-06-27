@@ -1,0 +1,48 @@
+{
+  "graph_entry_type": "standard_property",
+  "product": "hubspot",
+  "object": "contacts",
+  "internal_name": "engagements_last_meeting_booked",
+  "display_label": "Date of last meeting booked in meetings tool",
+  "field_type": "date",
+  "property_group": "contact_activity",
+  "semantic_meaning": "Records the date of the most recent meeting scheduled by a contact through HubSpot's meetings tool. If multiple meetings were booked, this reflects the latest one chronologically. This is specifically meetings-tool activity, not manually logged meetings.",
+  "synonyms_for_semantic_matching": [
+    "last meeting booked",
+    "last meeting date",
+    "most recent meeting",
+    "meeting booking date",
+    "last scheduled meeting",
+    "last appointment",
+    "meeting tool last date",
+    "last booking",
+    "recent meeting booked",
+    "last calendar booking",
+    "meeting recency"
+  ],
+  "is_calculated": false,
+  "can_be_workflow_trigger": true,
+  "can_be_set_by_workflow": false,
+  "is_editable_manually": false,
+  "auto_population_source": "Set automatically when a contact books a meeting through HubSpot's meetings tool. Shows the last chronological meeting date if multiple meetings are scheduled.",
+  "common_uses": [
+    "Sales follow-up: trigger post-meeting nurture sequences based on booking date",
+    "Meeting funnel analysis: measure time from first touch to first meeting booked",
+    "Rep performance tracking: identify contacts who booked meetings vs. those who didn't",
+    "Re-engagement: trigger outreach for contacts who booked but then went silent"
+  ],
+  "alternatives_to_consider": [
+    {
+      "property": "notes_last_contacted",
+      "when_appropriate": "When you want any communication type (not just meetings), including calls, emails, and chat"
+    },
+    {
+      "property": "hs_last_sales_activity_timestamp",
+      "when_appropriate": "When you want broader sales engagement signals beyond just meetings-tool bookings"
+    },
+    {
+      "property": "engagements_last_meeting_booked_campaign",
+      "when_appropriate": "When you need to know which campaign drove the last meeting booking"
+    }
+  ]
+}

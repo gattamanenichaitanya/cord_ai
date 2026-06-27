@@ -6,3 +6,6 @@ python-docx
 python-dotenv
 jsonschema
 requests
+tabulate
+sentence-transformers
+pytest

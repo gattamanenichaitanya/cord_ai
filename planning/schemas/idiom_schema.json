@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "graph_entry_type", "product", "idiom_id", "name", "description",
+    "when_to_use", "when_not_to_use", "implementation_pattern",
+    "questions_to_surface", "common_pitfalls"
+  ],
+  "properties": {
+    "graph_entry_type": { "const": "idiom" },
+    "product": { "type": "string" },
+    "idiom_id": { "type": "string" },
+    "name": { "type": "string" },
+    "description": { "type": "string" },
+    "when_to_use": { "type": "array" },
+    "when_not_to_use": { "type": "array" },
+    "implementation_pattern": { "type": "object" },
+    "questions_to_surface": { "type": "array" },
+    "common_pitfalls": { "type": "array" }
+  }
+}

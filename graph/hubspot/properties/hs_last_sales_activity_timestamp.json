@@ -1,0 +1,48 @@
+{
+  "graph_entry_type": "standard_property",
+  "product": "hubspot",
+  "object": "contacts",
+  "internal_name": "hs_last_sales_activity_timestamp",
+  "display_label": "Last Engagement Date",
+  "field_type": "date",
+  "property_group": "contact_activity",
+  "semantic_meaning": "Captures the last time a contact actively engaged with sales-oriented touchpoints such as your website, forms, documents, meetings links, or tracked emails. Unlike notes_last_contacted, this excludes marketing emails and bulk outreach, making it a purer signal of individual sales interest.",
+  "synonyms_for_semantic_matching": [
+    "last engagement date",
+    "last sales activity",
+    "last sales engagement",
+    "most recent sales interaction",
+    "sales activity timestamp",
+    "last engagement timestamp",
+    "last inbound engagement",
+    "contact engagement date",
+    "last sales touch",
+    "recent sales activity",
+    "last tracked engagement"
+  ],
+  "is_calculated": false,
+  "can_be_workflow_trigger": true,
+  "can_be_set_by_workflow": false,
+  "is_editable_manually": false,
+  "auto_population_source": "Set automatically by HubSpot when a contact engages with your site, submits a form, interacts with a document, clicks a meetings link, or opens/clicks a tracked email. Excludes marketing emails and emails sent to multiple contacts.",
+  "common_uses": [
+    "Lead scoring: weight contacts higher when they've recently engaged with sales content",
+    "Sales prioritization: sort leads by most recent engagement to focus on hot prospects",
+    "Re-engagement triggers: alert sales reps when a dormant contact re-engages",
+    "Pipeline hygiene: identify deals where the contact has gone silent"
+  ],
+  "alternatives_to_consider": [
+    {
+      "property": "notes_last_contacted",
+      "when_appropriate": "When you want the last time someone from your team reached out (outbound), not when the contact engaged (inbound)"
+    },
+    {
+      "property": "hs_last_sales_activity_date",
+      "when_appropriate": "Date-only version of this field, used in some reporting contexts"
+    },
+    {
+      "property": "engagements_last_meeting_booked",
+      "when_appropriate": "When you specifically need meeting-tool activity rather than all sales engagement types"
+    }
+  ]
+}

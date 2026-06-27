@@ -1,0 +1,49 @@
+{
+  "graph_entry_type": "standard_property",
+  "product": "hubspot",
+  "object": "contacts",
+  "internal_name": "notes_last_contacted",
+  "display_label": "Last Contacted",
+  "field_type": "date",
+  "property_group": "contact_activity",
+  "semantic_meaning": "Records the timestamp of the last outbound communication logged against a contact, including calls, emails, meetings, chat conversations, LinkedIn messages, postal mail, SMS, and WhatsApp messages. This is the go-to field for measuring engagement recency and identifying cold contacts.",
+  "synonyms_for_semantic_matching": [
+    "last interaction date",
+    "most recent engagement",
+    "last touchpoint",
+    "last contact date",
+    "last reached out",
+    "engagement recency",
+    "last call date",
+    "last meeting date",
+    "last activity timestamp",
+    "most recent touch",
+    "last communication",
+    "days since last contact"
+  ],
+  "is_calculated": false,
+  "can_be_workflow_trigger": true,
+  "can_be_set_by_workflow": false,
+  "is_editable_manually": false,
+  "auto_population_source": "Updated automatically when calls, emails, meetings, chat conversations, LinkedIn messages, postal mail, SMS, or WhatsApp messages are logged through HubSpot.",
+  "common_uses": [
+    "Re-engagement workflows: trigger outreach when no contact in 30/60/90 days",
+    "Sales manager dashboards: identify reps who haven't contacted assigned leads recently",
+    "List segmentation: build 'cold contacts' lists for re-engagement campaigns",
+    "SLA monitoring: ensure every MQL is contacted within a target timeframe"
+  ],
+  "alternatives_to_consider": [
+    {
+      "property": "hs_last_sales_activity_timestamp",
+      "when_appropriate": "When you want to track the last time the contact engaged with sales content (forms, documents, meetings links, tracked emails) — this is engagement-initiated, not outbound-initiated"
+    },
+    {
+      "property": "engagements_last_meeting_booked",
+      "when_appropriate": "When you specifically need the date of the last meeting booked via the meetings tool, not all communication types"
+    },
+    {
+      "property": "hs_sales_email_last_replied",
+      "when_appropriate": "When you specifically want to know the last time a contact replied to a sales email, not just when they were contacted"
+    }
+  ]
+}

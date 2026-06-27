@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "graph_entry_type", "product", "internal_name", "display_label",
+    "object_type_id", "semantic_meaning", "synonyms_for_semantic_matching",
+    "relationships", "object_level_capabilities", "key_standard_properties",
+    "identity_rules", "constraints"
+  ],
+  "properties": {
+    "graph_entry_type": { "const": "object" },
+    "product": { "type": "string" },
+    "internal_name": { "type": "string" },
+    "display_label": { "type": "string" },
+    "object_type_id": { "type": "string" },
+    "semantic_meaning": { "type": "string" },
+    "synonyms_for_semantic_matching": { "type": "array", "items": { "type": "string" }, "minItems": 5 },
+    "relationships": { "type": "array" },
+    "object_level_capabilities": { "type": "object" },
+    "key_standard_properties": { "type": "array" },
+    "identity_rules": { "type": "object" },
+    "constraints": { "type": "array" }
+  }
+}

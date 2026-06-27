@@ -1,0 +1,46 @@
+{
+  "graph_entry_type": "standard_property",
+  "product": "hubspot",
+  "object": "contacts",
+  "internal_name": "hubspot_owner_id",
+  "display_label": "Contact owner",
+  "field_type": "select",
+  "property_group": "sales_properties",
+  "semantic_meaning": "Designates the specific HubSpot user or Salesforce integration user responsible for managing the relationship with this contact. This is the cornerstone of lead routing, rep assignment, and ownership-based reporting.",
+  "synonyms_for_semantic_matching": [
+    "contact owner",
+    "assigned rep",
+    "record owner",
+    "sales rep",
+    "account owner",
+    "assigned user",
+    "lead owner",
+    "responsible rep",
+    "owner field",
+    "rep assignment",
+    "salesperson",
+    "assigned to"
+  ],
+  "is_calculated": false,
+  "can_be_workflow_trigger": true,
+  "can_be_set_by_workflow": true,
+  "is_editable_manually": true,
+  "auto_population_source": "Can be set manually, via workflows, through round-robin assignment in forms, or synced from Salesforce. Not auto-populated by default.",
+  "common_uses": [
+    "Lead routing: assign owners via round-robin or territory-based workflows on form submission",
+    "Permission gating: restrict record visibility to the owning rep's team",
+    "Reporting: build rep-level dashboards showing contacts owned, conversion rates, and activity",
+    "Handoff workflows: reassign ownership when lifecycle stage changes from MQL to SQL",
+    "Notification triggers: alert the owner when their contact takes a high-value action"
+  ],
+  "alternatives_to_consider": [
+    {
+      "property": "hs_all_owner_ids",
+      "when_appropriate": "When you need to see all owners historically assigned, not just the current one"
+    },
+    {
+      "property": "hubspot_team_id",
+      "when_appropriate": "When you want to filter or report by the team the owner belongs to, rather than the individual owner"
+    }
+  ]
+}

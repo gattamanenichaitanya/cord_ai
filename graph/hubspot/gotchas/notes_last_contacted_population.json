@@ -1,0 +1,26 @@
+{
+  "graph_entry_type": "gotcha",
+  "product": "hubspot",
+  "gotcha_id": "notes_last_contacted_requires_logged_activity",
+  "severity": "high",
+  "the_problem": "The notes_last_contacted property only populates when interactions (calls, emails, meetings, notes) are explicitly logged through HubSpot or via native integrations. External communications made outside of HubSpot or through unintegrated tools will not update this field.",
+  "how_it_manifests": [
+    "Workflows dependent on this field fail to trigger as expected",
+    "Account or contact status calculations show false all-Red or inactive states",
+    "Activity reports show artificial inactivity despite active outreach occurring in external channels"
+  ],
+  "when_to_surface_this": [
+    "Any requirement involving 'last interaction' or engagement recency logic",
+    "Any workflow using notes_last_contacted as a trigger, branching condition, or goal criteria"
+  ],
+  "questions_to_ask_consultant": [
+    "How is the team currently communicating with and logging interactions for contacts?",
+    "Are external communications tools (e.g., Zoom, Gmail/Outlook, Aircall, Slack) properly integrated with HubSpot?"
+  ],
+  "mitigation_options": [
+    "Confirm and mandate that reps log all interactions directly through HubSpot or integrated tools",
+    "Set up and verify native integrations for external communication channels (e.g. Gmail/Outlook sync, calling tools)",
+    "Use an alternative data source or fallback property for tracking engagement",
+    "Accept partial coverage and explicitly communicate the operational limitation to stakeholders"
+  ]
+}

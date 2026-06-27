@@ -1,0 +1,113 @@
+{
+  "graph_entry_type": "object",
+  "product": "hubspot",
+  "internal_name": "contacts",
+  "display_label": "Contact",
+  "object_type_id": "0-1",
+  "semantic_meaning": "Represents an individual person interacting with the company. It serves as the central record for tracking communication, engagement, and progression through the sales cycle.",
+  "synonyms_for_semantic_matching": [
+    "contact",
+    "person",
+    "individual",
+    "lead",
+    "prospect",
+    "customer",
+    "subscriber",
+    "user record",
+    "people"
+  ],
+  "relationships": [
+    {
+      "to_object": "Company",
+      "type": "many-to-one",
+      "note": "Default with secondary associations"
+    },
+    {
+      "to_object": "Deal",
+      "type": "many-to-many"
+    },
+    {
+      "to_object": "Ticket",
+      "type": "many-to-many"
+    }
+  ],
+  "object_level_capabilities": {
+    "supports_custom_properties": true,
+    "custom_properties_limit": 1000,
+    "supported_capabilities": [
+     {
+      "capability": "create_custom_property",
+      "see_entry": "capabilities/custom_property.json"
+     },
+     {
+      "capability": "workflow",
+      "see_entry": "capabilities/workflow.json",
+      "workflow_type_label": "contact-based"
+     }
+    ],
+    "supports_lists": true,
+    "list_types": [
+      "static",
+      "active"
+    ],
+    "supports_pipelines": false,
+    "supports_record_merging": true,
+    "default_property_groups": [
+      "sales_properties",
+      "deal_information",
+      "order_information",
+      "contact_activity",
+      "multiaccountmanagement",
+      "contactinformation",
+      "contactscripted",
+      "socialmediainformation",
+      "analyticsinformation",
+      "conversioninformation",
+      "emailinformation",
+      "facebook_ads_properties",
+      "contactlcs",
+      "smsinformation",
+      "prospecting_agent_information"
+    ]
+  },
+  "key_standard_properties": [
+    {
+      "internal_name": "email",
+      "why_it_matters": "A contact's email address acts as the primary unique identifier across the system.",
+      "see_entry": null
+    },
+    {
+      "internal_name": "lifecyclestage",
+      "why_it_matters": "Indicates the qualification of contacts to sales readiness to track funnel progression.",
+      "see_entry": null
+    },
+    {
+      "internal_name": "notes_last_contacted",
+      "why_it_matters": "Tracks the last time an outbound communication was logged for a contact.",
+      "see_entry": null
+    },
+    {
+      "internal_name": "hs_last_sales_activity_timestamp",
+      "why_it_matters": "Captures the last time a contact actively engaged with sales content or tracking.",
+      "see_entry": null
+    },
+    {
+      "internal_name": "engagements_last_meeting_booked",
+      "why_it_matters": "Records the date of the last meeting scheduled by the contact.",
+      "see_entry": null
+    },
+    {
+      "internal_name": "hubspot_owner_id",
+      "why_it_matters": "Designates the specific user responsible for managing the contact relationship.",
+      "see_entry": null
+    }
+  ],
+  "identity_rules": {
+    "default_unique_identifier": "email",
+    "duplicate_handling": "HubSpot prevents duplicate emails by default"
+  },
+  "constraints": [
+    "Free tier limits 1,000,000 total records",
+    "Custom properties limited to 1,000 per object type"
+  ]
+}

@@ -1,0 +1,238 @@
+{
+  "graph_entry_type": "capability",
+  "product": "hubspot",
+  "capability_name": "create_custom_property",
+  "what_this_enables": "Create custom data fields on any CRM object to capture business-specific information that HubSpot's default properties don't cover.",
+  "supported_objects": ["contacts", "companies", "deals", "tickets", "custom_object"],
+  "location_in_hubspot": {
+    "navigation": "Settings (gear) > Data Management > Properties > Create property",
+    "direct_url": "https://app.hubspot.com/property-settings/{portal_id}/properties?type={object_type_id}"
+  },
+  "subscription_requirements": {
+    "minimum_tier": "Free",
+    "permissions_required": ["Edit property settings"]
+  },
+  "available_field_types": [
+    {
+      "type": "Single-line text",
+      "api_type": "text",
+      "use_cases": [
+        "Capture free-form short answers like external IDs or reference codes",
+        "Store URLs or links not covered by default fields",
+        "Record short notes or labels specific to your business process",
+        "Track external system identifiers for integration mapping"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Maximum 65,536 characters"]
+    },
+    {
+      "type": "Multi-line text",
+      "api_type": "textarea",
+      "use_cases": [
+        "Capture detailed notes or descriptions that exceed single-line length",
+        "Store multi-paragraph context like implementation notes or requirements",
+        "Record free-form feedback or qualification notes from sales calls"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Maximum 65,536 characters"]
+    },
+    {
+      "type": "Number",
+      "api_type": "number",
+      "use_cases": [
+        "Track counts like number of employees, locations, or licenses",
+        "Store financial figures like budget or ARR",
+        "Record quantities for sizing or capacity planning",
+        "Capture scores from external systems"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Supports decimals", "No currency formatting by default"]
+    },
+    {
+      "type": "Dropdown select",
+      "api_type": "select",
+      "use_cases": [
+        "Standardize categorical data like industry vertical or product interest",
+        "Create picklists for rep-entered qualification fields",
+        "Build filterable segments based on fixed option sets",
+        "Control data quality by restricting input to predefined values",
+        "Enable consistent reporting across teams"
+      ],
+      "configuration_required": ["label", "group_name", "options (label + internal value for each)"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Single selection only", "Options can be added later but internal values cannot be changed"]
+    },
+    {
+      "type": "Multiple checkboxes",
+      "api_type": "checkbox",
+      "use_cases": [
+        "Track multiple product interests or feature requirements simultaneously",
+        "Record multi-select qualifications like compliance certifications held",
+        "Capture multiple communication preferences"
+      ],
+      "configuration_required": ["label", "group_name", "options (label + internal value for each)"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Values stored as semicolon-separated string in API", "Options can be added but internal values are immutable"]
+    },
+    {
+      "type": "Radio select",
+      "api_type": "radio",
+      "use_cases": [
+        "Binary or small-set choices displayed as radio buttons on forms",
+        "Lifecycle or stage fields where only one value applies",
+        "Yes/No/Maybe style qualification questions"
+      ],
+      "configuration_required": ["label", "group_name", "options (label + internal value for each)"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Single selection only", "Renders as radio buttons on forms, dropdown in record view"]
+    },
+    {
+      "type": "Single checkbox (boolean)",
+      "api_type": "booleancheckbox",
+      "use_cases": [
+        "Track opt-in/opt-out flags like 'Agreed to NDA' or 'Marketing consent'",
+        "Create binary qualifiers like 'Is decision maker' or 'Has budget'",
+        "Flag records for specific processing like 'Needs review' or 'VIP'",
+        "Track completion states like 'Onboarding complete'"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Values are 'true' or 'false' (strings in API)", "Defaults to false if not set"]
+    },
+    {
+      "type": "Date picker",
+      "api_type": "date",
+      "use_cases": [
+        "Track contract renewal dates or subscription expiry",
+        "Record milestone dates like 'Go-live date' or 'Onboarding start'",
+        "Capture date-only events where time of day is irrelevant",
+        "Set future action dates for workflow triggers"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Date only, no time component", "Stored as midnight UTC timestamp"]
+    },
+    {
+      "type": "Phone number",
+      "api_type": "phonenumber",
+      "use_cases": [
+        "Store additional phone numbers beyond the default phone and mobile fields",
+        "Capture department-specific numbers like 'Direct line' or 'Office phone'",
+        "Track international numbers with formatting"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["No automatic formatting or validation", "Stored as plain string"]
+    },
+    {
+      "type": "Calculation (equation)",
+      "api_type": "calculation_equation",
+      "use_cases": [
+        "Derive values from other properties (e.g., days since last contact)",
+        "Compute ratios or percentages from two numeric fields",
+        "Concatenate string fields into a formatted display value",
+        "Calculate time differences between date properties"
+      ],
+      "configuration_required": ["label", "group_name", "calculation_formula"],
+      "supports_manual_override": false,
+      "supports_workflow_setting": false,
+      "constraints": ["Value is always derived, never manually set", "Formula references other properties by internal name", "Recalculated automatically when source properties change"]
+    },
+    {
+      "type": "Calculation (score)",
+      "api_type": "calculation_score",
+      "use_cases": [
+        "Build lead scoring models based on weighted property values",
+        "Create engagement scores combining multiple activity signals",
+        "Compute fit scores from firmographic data points",
+        "Prioritize records with composite quality scores"
+      ],
+      "configuration_required": ["label", "group_name", "scoring_criteria"],
+      "supports_manual_override": false,
+      "supports_workflow_setting": false,
+      "constraints": ["Value is always derived from scoring rules", "Cannot be manually overridden", "Score recalculates when source properties change", "Requires HubSpot Marketing Hub Professional or higher for full scoring"]
+    },
+    {
+      "type": "Calculation (rollup)",
+      "api_type": "calculation_rollup",
+      "use_cases": [
+        "Aggregate values from associated records (e.g., total deal amount on a company)",
+        "Count associated records meeting certain criteria",
+        "Compute min/max/average across associated object properties"
+      ],
+      "configuration_required": ["label", "group_name", "rollup_configuration"],
+      "supports_manual_override": false,
+      "supports_workflow_setting": false,
+      "constraints": ["Rolls up from associated objects only", "Limited aggregation functions: sum, count, min, max, average"]
+    },
+    {
+      "type": "Calculation (read time)",
+      "api_type": "calculation_read_time",
+      "use_cases": [
+        "Estimate reading time for content-heavy properties or associated content"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": false,
+      "supports_workflow_setting": false,
+      "constraints": ["Specialized calculation type", "Limited use outside content contexts"]
+    },
+    {
+      "type": "Rich text (HTML)",
+      "api_type": "html",
+      "use_cases": [
+        "Store formatted notes with bold, italics, and lists",
+        "Capture rich-text descriptions or instructions",
+        "Record detailed implementation notes with structure"
+      ],
+      "configuration_required": ["label", "group_name"],
+      "supports_manual_override": true,
+      "supports_workflow_setting": true,
+      "constraints": ["Stored as HTML", "Rendered with formatting in record view", "Not searchable by content in lists"]
+    }
+  ],
+  "global_constraints": [
+    "Internal name cannot be changed after creation",
+    "Internal name auto-populates from label (lowercased, spaces converted to underscores)",
+    "Maximum 1,000 custom properties per object",
+    "Property names are case-sensitive in API contexts",
+    "Calculation properties cannot be manually overridden"
+  ],
+  "decision_criteria": {
+    "dropdown_vs_calculation": {
+      "use_dropdown_when": "The value needs to be manually selected or set by a workflow, and the set of options is known upfront.",
+      "use_calculation_when": "The value should always be derived from other properties and never manually overridden."
+    },
+    "number_vs_score": {
+      "use_number_when": "You need a raw count, amount, or quantity that can be manually entered or set via workflow.",
+      "use_score_when": "You need a weighted composite of multiple inputs that auto-recalculates — typically for lead scoring or prioritization."
+    },
+    "date_vs_datetime": {
+      "use_date_when": "Only the calendar day matters (e.g., contract renewal date, go-live date).",
+      "use_datetime_when": "The specific time of day matters (e.g., meeting timestamp, SLA deadline with hours)."
+    },
+    "text_vs_dropdown": {
+      "use_text_when": "Input is free-form, unpredictable, or unique per record (e.g., external IDs, URLs, notes).",
+      "use_dropdown_when": "Input should be constrained to a fixed set of options for consistency and reporting (e.g., industry, region, product tier)."
+    }
+  },
+  "execution_method": {
+    "ui_operation": "create_custom_property",
+    "api_endpoint": "POST /crm/v3/properties/{objectType}",
+    "preferred_method_for_poc": "ui_operation"
+  },
+  "common_pitfalls_referenced_in_gotchas": [
+    "property_internal_name_immutable"
+  ]
+}

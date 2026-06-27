@@ -1,0 +1,20 @@
+{
+  "graph_entry_type": "gotcha",
+  "product": "hubspot",
+  "gotcha_id": "property_internal_name_immutable",
+  "severity": "medium",
+  "the_problem": "Internal property names in HubSpot cannot be changed after creation. While the display label can be updated at any time, the internal API name remains permanent.",
+  "how_it_manifests": [
+    "Requests to 'rename a custom property' at the API or backend level cannot be fulfilled directly",
+    "Renaming requires creating a brand new property, migrating all historical data, updating dependencies (workflows, forms, lists, integration mappings), and archiving the old property"
+  ],
+  "when_to_surface_this": [
+    "Any time a new custom property is about to be created",
+    "During design reviews to confirm that internal naming conventions match technical standards before provisioning"
+  ],
+  "mitigation_options": [
+    "Verify and confirm internal naming conventions with the consultant prior to creation",
+    "Ensure properties are created using carefully considered, finalized internal names",
+    "Clearly document that any future internal name change will necessitate a full data and workflow migration process"
+  ]
+}

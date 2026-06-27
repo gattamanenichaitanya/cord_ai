@@ -1,0 +1,474 @@
+{
+  "graph_entry_type": "operation",
+  "product": "hubspot",
+  "operation_id": "hubspot.create_workflow",
+  "description": "Create a complete workflow end-to-end: name, trigger, eligible records, settings, actions, and publish",
+
+  "applies_to_objects": ["contacts", "companies", "deals", "tickets"],
+
+  "preconditions": [
+    "User has Edit workflows permission, or Super Admin",
+    "Account has Professional or Enterprise tier of an applicable hub",
+    "All custom properties referenced by triggers and actions already exist",
+    "External integrations referenced by actions (e.g., Slack) are connected"
+  ],
+
+  "execution_methods": [
+    {
+      "method": "ui",
+      "preference_rank": 1,
+      "preference_reason": "HubSpot's workflow API does not support all action types we need. UI is the only complete method.",
+
+      "navigation": {
+        "preferred": "direct_url",
+        "url_pattern": "https://app-na2.hubspot.com/workflows/{portal_id}/create",
+        "url_parameters": {
+          "portal_id": "From HUBSPOT_PORTAL_ID env var",
+          "host_subdomain": "Varies by account region — observed 'app-na2' for North America 2. Read from HUBSPOT_HOST env var."
+        },
+        "fallback_method": "menu_navigation",
+        "menu_path": [
+          "Automation (top nav) → Workflows",
+          "Create workflow button (top right)",
+          "From scratch"
+        ],
+        "success_signal": {
+          "page_loads": true,
+          "left_panel_heading": "Choose a trigger to start this workflow",
+          "trigger_options_visible": ["Trigger manually", "Met filter criteria", "On a schedule"]
+        }
+      },
+
+      "steps": [
+        {
+          "step_id": 1,
+          "intent": "[Phase 1: Name] Click the workflow name at the top of the canvas and rename it",
+          "element_to_find": {
+            "primary_role": "textbox",
+            "primary_label": "Unnamed workflow",
+            "placeholder_text": "Unnamed workflow",
+            "fallback_selectors": ["input[placeholder='Unnamed workflow']", "input.AutoSizedTextInput__Input-qSHZ"],
+            "visual_description": "Centered title at the top of the canvas, shown as 'Unnamed workflow' until set"
+          },
+          "action": "fill",
+          "value_source": "plan.workflow_name"
+        },
+        {
+          "step_id": 2,
+          "intent": "[Phase 2: Trigger] Select 'Met filter criteria' as the trigger type from the trigger picker (already open by default)",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Met filter criteria",
+            "visual_description": "Card in the left-side trigger picker, alongside 'Trigger manually' and 'On a schedule'"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "wizard_advances_to": "Eligible records",
+            "panel_shows": "Choose a type of record that can enroll"
+          },
+          "expansion_scope_not_covered": "Other trigger types (Trigger manually, On a schedule, Data values, Emails/calls, Websites/media, Automations triggered, Custom events) require separate documentation"
+        },
+        {
+          "step_id": 3,
+          "intent": "[Phase 3: Eligible records] Choose the record type that can enroll",
+          "element_to_find": {
+            "primary_role": "listitem",
+            "primary_label": "value of plan.object_label",
+            "visual_description": "Vertical list of record types: Contact, Company, Deal, Ticket, Call, Cart, etc."
+          },
+          "action": "click",
+          "value_source": "plan.object_label",
+          "value_mapping_from_internal_name": {
+            "contacts": "Contact",
+            "companies": "Company",
+            "deals": "Deal",
+            "tickets": "Ticket"
+          },
+          "expected_outcome": {
+            "selected_record_type_appears": "Selected type shows in the heading 'Only enroll records that meet these conditions'",
+            "add_criteria_button_visible": true
+          }
+        },
+        {
+          "step_id": 4,
+          "intent": "[Phase 3: Eligible records] Click the 'Add criteria' button to open the filter category picker",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Add criteria",
+            "visual_description": "Button below 'This workflow doesn't have any...' text. Note: this is the FIRST 'Add criteria' button — opens the category picker"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "panel_opens": true,
+            "panel_title": "Add criteria",
+            "filter_category_search_visible": true
+          }
+        },
+        {
+          "step_id": 5,
+          "intent": "[Phase 3: Eligible records] Select filter category — 'Contact properties' for the POC. This appears under 'Object information'.",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Contact properties",
+            "visual_description": "Listed under the 'Object information' section in the Add criteria panel"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "panel_advances_to": "Property selection step",
+            "search_box_label_contains": "Search in Contact properties"
+          },
+          "expansion_scope_not_covered": "Other filter categories: Segment (List) membership, Workflow enrollment, Import membership, Marketing interactions, Ads interactions, etc. Only Contact properties documented for POC."
+        },
+        {
+          "step_id": 6,
+          "intent": "[Phase 3: Eligible records] Search for and select the trigger property",
+          "element_to_find": {
+            "primary_role": "searchbox",
+            "primary_label": "Search in Contact properties"
+          },
+          "action": "fill_then_select",
+          "value_source": "plan.trigger.property_label",
+          "expected_outcome": {
+            "criteria_group_created": "Group 1 appears on the panel",
+            "criteria_row_has_three_fields": ["property (pre-filled with selected)", "operator (defaulted by property type)", "value (empty)"]
+          }
+        },
+        {
+          "step_id": 7,
+          "intent": "[Phase 3: Eligible records] Verify or change the operator (defaulted based on property type)",
+          "element_to_find": {
+            "primary_role": "combobox",
+            "position": "Middle field of the criteria row"
+          },
+          "action": "verify_or_select",
+          "value_source": "plan.trigger.operator_label",
+          "operator_label_mapping": {
+            "equals": "is equal to any of",
+            "is_any_of": "is any of",
+            "greater_than": "is greater than",
+            "less_than": "is less than",
+            "is_within_next_n_days": "is within the next [N] days"
+          },
+          "notes": "The operator defaults based on the property's data type. Only change if the default doesn't match the requirement."
+        },
+        {
+          "step_id": 8,
+          "intent": "[Phase 3: Eligible records] Enter the comparison value",
+          "element_to_find": {
+            "primary_role": "combobox_or_textbox",
+            "position": "Third (bottom) field of the criteria row"
+          },
+          "action": "fill_or_select",
+          "value_source": "plan.trigger.value"
+        },
+        {
+          "step_id": 9,
+          "intent": "[Phase 3: Eligible records] (Optional) Add additional criteria within the same group (AND logic) or in a new group (OR logic)",
+          "action": "evaluate_branches",
+          "conditional_on": "plan.trigger.has_additional_conditions",
+          "branches": {
+            "additional_AND_condition": "Click the 'Add criteria' button inside Group 1 (positioned after the 'and' text). Repeat steps 5–8.",
+            "additional_OR_group": "Click the 'or' link/button outside Group 1, then the adjacent 'Add criteria' button to create Group 2. Repeat steps 5–8.",
+            "no_additional": "Proceed to next step"
+          },
+          "notes": "Distinguishing the two 'Add criteria' buttons: the one INSIDE a group with 'and' label adds an AND condition to that group; the one OUTSIDE groups (next to 'or') creates a new OR group."
+        },
+        {
+          "step_id": 10,
+          "intent": "[Phase 3: Eligible records] Click Next to advance to Settings",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Next",
+            "visual_description": "Top right of left panel",
+            "html_data_key": "createWorkflow.nextButton"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "wizard_advances_to": "Settings"
+          }
+        },
+        {
+          "step_id": 11,
+          "intent": "[Phase 4: Settings] Configure re-enrollment toggle",
+          "element_to_find": {
+            "primary_role": "switch",
+            "primary_label": "Re-enroll",
+            "context_text": "Allow contacts to re-enroll after completing the workflow"
+          },
+          "action": "set_toggle",
+          "value_source": "plan.re_enrollment_enabled",
+          "default_value": false
+        },
+        {
+          "step_id": 12,
+          "intent": "[Phase 4: Settings] Click 'Save and continue' to finalize trigger setup and open the action picker",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Save and continue",
+            "visual_description": "Top right of left panel"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "panel_changes_to": "Choose an action",
+            "canvas_shows_trigger_card_populated": true,
+            "trigger_card_shows_summary": "Group 1 with the configured condition"
+          }
+        },
+        {
+          "step_id": 13,
+          "intent": "[Phase 5: Actions] For each action in plan.actions, configure it via the action picker",
+          "action": "execute_loop",
+          "loop_over": "plan.actions",
+          "loop_sub_steps": [
+            {
+              "intent": "If this is NOT the first action, click the '+' button on the canvas below the previous node to open the action picker",
+              "skip_when": "current_action_index == 0",
+              "element_to_find": {
+                "primary_role": "button",
+                "visual_description": "Plus (+) button on canvas, between trigger card and any existing action nodes, or below the last action node",
+                "icon_indicator": "svg with data-icon-name='Add'"
+              },
+              "action": "click",
+              "expected_outcome": {"panel_opens": "Choose an action"}
+            },
+            {
+              "intent": "Select the action type",
+              "action": "evaluate_branches",
+              "conditional_on": "current_action.type",
+              "branches": {
+                "set_property_value": {
+                  "category_to_open": "CRM",
+                  "action_label_in_picker": "Edit record",
+                  "action_description_in_picker": "Edit, copy, and clear CRM property values"
+                }
+              },
+              "expansion_scope_not_covered": "Other actions: Delay, Branch, Create task, Send internal email notification, Send Slack notification, Create record. Each requires its own branch in this conditional with specific config_sub_steps. Start with set_property_value only."
+            },
+            {
+              "intent": "Configure 'Edit record' action — verify Record type",
+              "applies_to_action_type": "set_property_value",
+              "element_to_find": {
+                "primary_role": "combobox",
+                "primary_label": "Record type",
+                "default_value": "Contact (Current object)"
+              },
+              "action": "verify_or_select",
+              "value_source": "current_action.record_type",
+              "default_value": "Current object",
+              "notes": "Defaults to the current workflow's record type. Usually no change needed."
+            },
+            {
+              "intent": "Configure 'Edit record' action — select property to edit",
+              "applies_to_action_type": "set_property_value",
+              "element_to_find": {
+                "primary_role": "combobox",
+                "primary_label": "Property to edit",
+                "placeholder": "Choose a property"
+              },
+              "action": "select_option",
+              "value_source": "current_action.property_label"
+            },
+            {
+              "intent": "Configure 'Edit record' action — select change type",
+              "applies_to_action_type": "set_property_value",
+              "element_to_find": {
+                "primary_role": "combobox",
+                "primary_label": "Change type"
+              },
+              "action": "select_option",
+              "value_source": "current_action.change_type",
+              "allowed_values": ["Replace", "Clear"],
+              "default_value": "Replace"
+            },
+            {
+              "intent": "Configure 'Edit record' action — choose value (only when change_type == Replace)",
+              "applies_to_action_type": "set_property_value",
+              "conditional_on": "current_action.change_type == 'Replace'",
+              "element_to_find": {
+                "primary_label": "Choose a value",
+                "input_type_varies_by_property_field_type": true
+              },
+              "action": "fill_or_select",
+              "value_source": "current_action.value",
+              "notes": "Input shape depends on the property's field type. Dropdown property shows option picker. Number property shows numeric input. Text property shows textbox."
+            },
+            {
+              "intent": "Click Save to commit this action",
+              "element_to_find": {
+                "primary_role": "button",
+                "primary_label": "Save",
+                "visual_description": "Top right of action configuration panel"
+              },
+              "action": "click",
+              "expected_outcome": {
+                "panel_closes": true,
+                "canvas_shows_new_action_node": true,
+                "node_summary_format": "Set [property_label] to [value]"
+              }
+            }
+          ]
+        },
+        {
+          "step_id": 14,
+          "intent": "[Phase 6: Publish] Click 'Review and Turn On' button to open the review sidebar",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Review and Turn On",
+            "visual_description": "Top right of canvas, dark background button (becomes the primary action once the workflow has a valid trigger and at least one action)"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "sidebar_opens": true,
+            "sidebar_title": "Review Workflow",
+            "first_step_shown": "Step 1: Enrollment",
+            "loading_state": "Sidebar may show loading state briefly while it calculates current enrollment count"
+          }
+        },
+        {
+          "step_id": 15,
+          "intent": "[Phase 6: Publish] Wait for the enrollment criteria count to finish loading",
+          "element_to_find": {
+            "primary_label_pattern": "{N} contacts meet the enrollment criteria",
+            "visual_description": "Highlighted info card at top of Step 1 showing the count of contacts that currently match"
+          },
+          "action": "wait_until_visible",
+          "timeout_seconds": 15,
+          "notes": "The number is informational only — does not need to be captured. Just confirms the sidebar has finished its initial load."
+        },
+        {
+          "step_id": 16,
+          "intent": "[Phase 6: Publish] Choose enrollment behavior for existing records that already match",
+          "element_to_find": {
+            "primary_role": "radiogroup",
+            "question_text": "Do you want to enroll contacts that currently meet the enrollment criteria when the workflow turns on?",
+            "options": [
+              {
+                "label": "Yes, enroll contacts who meet the enrollment criteria immediately when the workflow is turned on",
+                "value": "enroll_existing"
+              },
+              {
+                "label": "No, only enroll contacts who meet the enrollment criteria after the workflow is turned on",
+                "value": "no_enroll_existing",
+                "is_default_selected": true
+              }
+            ]
+          },
+          "action": "select_radio",
+          "value_source": "plan.enroll_existing_records",
+          "value_mapping": {
+            "true": "Yes, enroll contacts who meet the enrollment criteria immediately when the workflow is turned on",
+            "false": "No, only enroll contacts who meet the enrollment criteria after the workflow is turned on"
+          },
+          "default_for_poc": false,
+          "notes": "Defaults to 'No' on first open. For most production workflows the safer choice is 'No' — enrolling existing records can trigger mass action sequences unintentionally. For risk-status workflows, 'Yes' may be desired to score the existing database immediately."
+        },
+        {
+          "step_id": 17,
+          "intent": "[Phase 6: Publish] Skip the remaining review steps and proceed to activation",
+          "element_to_find": {
+            "primary_role": "link",
+            "primary_label": "Skip to Turn On",
+            "visual_description": "Bottom-left of the Review Workflow sidebar"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "sidebar_advances_to_final_step": true,
+            "turn_on_button_visible": true
+          },
+          "expansion_scope_not_covered": "Clicking 'Next' instead would walk through Steps 2, 3, 4+ of the Review Workflow sidebar (additional settings like suppression lists, association settings, etc.). For POC we skip to the end. Document these intermediate review steps if needed later."
+        },
+        {
+          "step_id": 18,
+          "intent": "[Phase 6: Publish] Click 'Turn On Workflow' to activate",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Turn On Workflow",
+            "visual_description": "Final button in the Review Workflow sidebar after skipping",
+            "fallback_labels": ["Turn on workflow", "Turn On"]
+          },
+          "action": "click",
+          "expected_outcome": {
+            "sidebar_closes": true,
+            "workflow_status_indicator_shows": "ON",
+            "workflow_status_color": "green dot under the title",
+            "header_button_changes_to": "Turn off",
+            "secondary_button_visible": "Enroll"
+          }
+        }
+      ],
+
+      "verification": {
+        "method": "in_place_state_check",
+        "primary_check": {
+          "element": "workflow status indicator below title",
+          "expected_text": "ON",
+          "expected_visual": "green status dot"
+        },
+        "secondary_check": {
+          "element": "primary button in header (top-right)",
+          "expected_text": "Turn off",
+          "rationale": "Button label flips from 'Review and Turn On' / 'Turn On Workflow' to 'Turn off' only when activation succeeds"
+        },
+        "fallback_check": {
+          "method": "navigate_and_check",
+          "navigate_to": "https://app-na2.hubspot.com/workflows/{portal_id}",
+          "search_for": "plan.workflow_name",
+          "expected": "Workflow appears in list with active/ON status indicator"
+        }
+      },
+
+      "known_failures": [
+        {
+          "symptom": "'Save and continue' button is disabled at Settings step",
+          "likely_cause": "Trigger criteria not fully configured (missing value in a filter row)",
+          "recovery": "Navigate back to Eligible records step, complete any incomplete criteria rows, retry"
+        },
+        {
+          "symptom": "Action category panel doesn't show expected action",
+          "likely_cause": "Action requires an integration (e.g., Slack) that isn't connected, OR the action belongs to a different category than expected",
+          "recovery": "Verify integration is connected in Settings → Integrations. Check action category mapping in workflow capability entry."
+        },
+        {
+          "symptom": "Trigger property dropdown doesn't contain expected property",
+          "likely_cause": "Custom property hasn't been created yet on this object",
+          "recovery": "Verify property exists via inspector tool. If missing, execute create_custom_property operation first, then return to this step."
+        },
+        {
+          "symptom": "Two 'Add criteria' buttons visible — agent clicks the wrong one",
+          "likely_cause": "Confusion between intra-group AND criteria button and inter-group OR criteria button",
+          "recovery": "Use position-based disambiguation: the button INSIDE the Group 1 card (after the 'and' text) adds AND criteria. The button OUTSIDE groups (next to 'or' text) creates a new OR group."
+        },
+        {
+          "symptom": "'Review and Turn On' button is disabled",
+          "likely_cause": "Workflow has invalid state — missing trigger, missing actions, or actions with unfilled required fields",
+          "recovery": "Inspect canvas for action nodes with warning indicators (yellow/red badges). Complete any partial configurations before retrying."
+        },
+        {
+          "symptom": "Review Workflow sidebar shows '0 contacts meet the enrollment criteria' and consultant expected non-zero",
+          "likely_cause": "Trigger conditions are too restrictive, source property is unpopulated for existing contacts, or property values don't actually match the operator/value combination",
+          "recovery": "Surface as informational to consultant — workflow can still activate, but no existing contacts will be processed. May indicate a planning gap (e.g., the 22% null data scenario)."
+        },
+        {
+          "symptom": "'Turn On Workflow' click succeeds but status doesn't change to ON",
+          "likely_cause": "Backend save failed silently, or page state stale",
+          "recovery": "Wait 5 seconds, refresh page, check workflow list. If still off, re-attempt publish from canvas. If repeated failure, surface as backend error."
+        }
+      ],
+
+      "estimated_duration_seconds": 150
+    }
+  ],
+
+  "expansion_scope_not_covered": [
+    "Branch (if/then) actions",
+    "Delay action",
+    "Communications actions (Send internal email, Send Slack notification)",
+    "CRM actions beyond Edit record (Create task, Create record, etc.)",
+    "Event-based, scheduled, webhook-based triggers (only filter-based with Contact properties documented)",
+    "Filter categories beyond Contact properties (Segment membership, Workflow enrollment, Marketing interactions, etc.)",
+    "Editing existing workflows",
+    "Workflow templates",
+    "Intermediate Review Workflow sidebar steps beyond Step 1: Enrollment (Steps 2, 3, 4+ that 'Skip to Turn On' bypasses — includes suppression lists, association settings, performance goals)",
+    "Manual one-off enrollment via the 'Enroll' button that appears post-activation"
+  ]
+}

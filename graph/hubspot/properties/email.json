@@ -1,0 +1,44 @@
+{
+  "graph_entry_type": "standard_property",
+  "product": "hubspot",
+  "object": "contacts",
+  "internal_name": "email",
+  "display_label": "Email",
+  "field_type": "text",
+  "property_group": "contactinformation",
+  "semantic_meaning": "The primary email address for a contact. This is HubSpot's default unique identifier for contacts and the foundation of deduplication, association inference, and communication tracking.",
+  "synonyms_for_semantic_matching": [
+    "email address",
+    "contact email",
+    "primary email",
+    "email field",
+    "email identifier",
+    "person email",
+    "work email",
+    "business email",
+    "unique identifier",
+    "contact identifier"
+  ],
+  "is_calculated": false,
+  "can_be_workflow_trigger": true,
+  "can_be_set_by_workflow": true,
+  "is_editable_manually": true,
+  "auto_population_source": "Can be set via form submissions, imports, API, or manual entry. HubSpot uses it to auto-associate contacts with companies by matching the email domain.",
+  "common_uses": [
+    "Primary key for deduplication: HubSpot blocks creation of a second contact with the same email",
+    "Auto-association with Company records via email domain matching",
+    "Enrollment trigger for workflows based on email domain patterns",
+    "Segmentation in lists by email domain for ABM campaigns",
+    "Required field for sending marketing and sales emails"
+  ],
+  "alternatives_to_consider": [
+    {
+      "property": "hs_additional_emails",
+      "when_appropriate": "When a contact has secondary email addresses that should also be tracked but not used as the primary identifier"
+    },
+    {
+      "property": "hs_email_domain",
+      "when_appropriate": "When you need to filter or segment by just the domain portion of the email, not the full address"
+    }
+  ]
+}

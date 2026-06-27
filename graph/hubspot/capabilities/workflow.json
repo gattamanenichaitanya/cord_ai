@@ -1,0 +1,138 @@
+{
+  "graph_entry_type": "capability",
+  "product": "hubspot",
+  "capability_name": "workflow",
+  "what_this_enables": "Automating actions on records when triggers fire or when properties change.",
+  "synonyms_for_semantic_matching": [
+    "automate when properties change",
+    "property change automation",
+    "workflow automation",
+    "automated workflow execution",
+    "trigger automated actions",
+    "automate record updates"
+  ],
+  "decision_criteria": {
+    "workflow_vs_list": "Use workflows when automated actions or property updates need to occur upon trigger events. Use lists when segmentation without execution is needed.",
+    "re_enrollment": "Enable re-enrollment when property updates should continually re-trigger automated logic."
+  },
+
+  "applies_to_objects": [
+    {"object": "contacts", "workflow_type_label": "contact-based"},
+    {"object": "companies", "workflow_type_label": "company-based"},
+    {"object": "deals", "workflow_type_label": "deal-based"},
+    {"object": "tickets", "workflow_type_label": "ticket-based"},
+    {"object": "quotes", "workflow_type_label": "quote-based"}
+  ],
+
+  "location_in_hubspot": {
+    "navigation": "Automation → Workflows → Create workflow → From scratch",
+    "direct_url": "https://app.hubspot.com/l/workflows",
+    "setup_flow_steps": ["Start triggers", "Eligible records", "Settings"]
+  },
+
+  "subscription_requirements": {
+    "minimum_tier": "Professional",
+    "applicable_hubs": ["Marketing Hub", "Sales Hub", "Service Hub", "Data Hub"],
+    "not_available_in": ["Free", "Starter"]
+  },
+
+  "trigger_categories": {
+    "manual_trigger": {
+      "hubspot_ui_label": "Trigger manually",
+      "purpose": "Workflow runs only when manually started; useful for testing or one-off enrollments"
+    },
+    "filter_based_trigger": {
+      "hubspot_ui_label": "Met filter criteria",
+      "purpose": "Records enroll when their property values match specified filter criteria",
+      "most_common_for_status_workflows": true,
+      "supported_logic": ["AND (all criteria in group)", "OR (any criteria across groups)"],
+      "supported_operators": [
+        {"hubspot_ui_label": "is", "applies_to": "any property"},
+        {"hubspot_ui_label": "is greater than", "applies_to": "number properties"},
+        {"hubspot_ui_label": "is less than", "applies_to": "number properties"},
+        {"hubspot_ui_label": "is any of", "applies_to": "dropdown, text properties"},
+        {"hubspot_ui_label": "is within next", "applies_to": "date properties"},
+        {"hubspot_ui_label": "is known", "applies_to": "any property"}
+      ]
+    },
+    "scheduled_trigger": {
+      "hubspot_ui_label": "On a schedule",
+      "purpose": "Re-evaluates eligible records on a recurring schedule"
+    },
+    "data_event_trigger": {
+      "hubspot_ui_label": "Data values",
+      "purpose": "Fires when data is created, changed, or meets conditions",
+      "expansion_scope_for_poc": "not used in current use cases — documented but not detailed"
+    }
+  },
+
+  "action_categories": {
+    "delay": {
+      "hubspot_ui_label": "Delay",
+      "purpose": "Wait before next action",
+      "category_in_picker": "quick action (top-level button)"
+    },
+    "branch": {
+      "hubspot_ui_label": "Branch",
+      "purpose": "Conditional logic — different paths based on values",
+      "category_in_picker": "quick action (top-level button)"
+    },
+    "crm_actions": {
+      "category_in_picker": "CRM",
+      "actions": [
+        {
+          "hubspot_ui_label": "Edit record",
+          "conceptual_name": "set_property_value",
+          "purpose": "Edit, copy, or clear CRM property values",
+          "config_required": ["property_name", "action_type (set/copy/clear)", "value"]
+        },
+        {
+          "hubspot_ui_label": "Increase or decrease property value",
+          "conceptual_name": "increment_property",
+          "purpose": "Increment/decrement a number property by a specified amount"
+        },
+        {
+          "hubspot_ui_label": "Create task",
+          "conceptual_name": "create_task",
+          "purpose": "Create a follow-up task associated with the record",
+          "config_required": ["title", "assignee", "due_date", "priority", "notes"]
+        },
+        {
+          "hubspot_ui_label": "Create record",
+          "conceptual_name": "create_record",
+          "purpose": "Create a new record (deal, ticket, etc.) — used for pipeline auto-creation",
+          "config_required": ["object_type", "pipeline (if applicable)", "stage (if applicable)", "field values"]
+        }
+      ]
+    },
+    "communications": {
+      "category_in_picker": "Communications",
+      "actions": [
+        {
+          "hubspot_ui_label": "Send internal email notification",
+          "conceptual_name": "send_internal_email",
+          "purpose": "Email a HubSpot user (typically the record owner)",
+          "config_required": ["recipient", "subject", "body"]
+        },
+        {
+          "hubspot_ui_label": "Send Slack notification",
+          "conceptual_name": "send_slack_notification",
+          "purpose": "Post to a Slack channel",
+          "config_required": ["channel", "message"],
+          "external_dependency": "Requires HubSpot-Slack integration"
+        }
+      ]
+    }
+  },
+
+  "re_enrollment_configuration": {
+    "is_configurable_per_workflow": true,
+    "default_state": "disabled",
+    "hubspot_ui_label_when_off": "Re-enroll off",
+    "hubspot_ui_label_when_on": "Re-enroll on",
+    "configured_via": "Details link in the trigger panel after trigger is set up",
+    "decision_guidance": "Enable for ongoing recalculation. Disable for one-time changes or to preserve manual overrides."
+  },
+
+  "expansion_scope_not_covered": "Currently documents only the actions needed for the Acme design document workflows (6.1 At-Risk Alert and 6.2 Renewal Pipeline). NOT documented: AI actions, all communication actions beyond email/Slack, enrichment, association management, deletion, communication subscriptions, connected app actions. Add sections as use cases require."
+}

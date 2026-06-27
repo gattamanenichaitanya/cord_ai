@@ -1,0 +1,194 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Operation Entry Schema",
+  "type": "object",
+  "required": [
+    "graph_entry_type",
+    "product",
+    "operation_id",
+    "description",
+    "applies_to_objects",
+    "preconditions",
+    "execution_methods"
+  ],
+  "properties": {
+    "graph_entry_type": {
+      "type": "string",
+      "const": "operation"
+    },
+    "product": {
+      "type": "string"
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[a-z]+\\.[a-z_]+(\\.[a-z_]+)*$",
+      "description": "Format: product.operation_name (e.g., 'hubspot.create_custom_property')"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10
+    },
+    "applies_to_objects": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1,
+      "description": "List of object types this operation can be performed on"
+    },
+    "preconditions": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "execution_methods": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One or more methods to execute this operation, ordered by preference",
+      "items": {
+        "oneOf": [
+          {"$ref": "#/definitions/api_method"},
+          {"$ref": "#/definitions/ui_method"}
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "api_method": {
+      "type": "object",
+      "required": [
+        "method",
+        "preference_rank",
+        "endpoint",
+        "base_url",
+        "authentication",
+        "required_payload_fields"
+      ],
+      "properties": {
+        "method": {"const": "api"},
+        "preference_rank": {"type": "integer", "minimum": 1},
+        "preference_reason": {"type": "string"},
+        "endpoint": {
+          "type": "string",
+          "description": "HTTP method + path (e.g., 'POST /crm/2026-03/properties/{objectType}')"
+        },
+        "base_url": {"type": "string", "format": "uri"},
+        "documentation": {"type": "string", "format": "uri"},
+        "authentication": {"type": "string"},
+        "path_parameters": {"type": "object"},
+        "required_payload_fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["field", "description"],
+            "properties": {
+              "field": {"type": "string"},
+              "description": {"type": "string"}
+            }
+          }
+        },
+        "conditional_payload_fields": {"type": "array"},
+        "optional_payload_fields": {"type": "array"},
+        "success_response": {"type": "object"},
+        "verification": {"type": "object"},
+        "known_failures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["symptom", "likely_cause", "recovery"],
+            "properties": {
+              "status_code": {"type": ["integer", "string"]},
+              "symptom": {"type": "string"},
+              "likely_cause": {"type": "string"},
+              "recovery": {"type": "string"}
+            }
+          }
+        },
+        "estimated_duration_seconds": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": true
+    },
+    "ui_method": {
+      "type": "object",
+      "required": [
+        "method",
+        "preference_rank",
+        "navigation",
+        "steps"
+      ],
+      "properties": {
+        "method": {"const": "ui"},
+        "preference_rank": {"type": "integer", "minimum": 1},
+        "preference_reason": {"type": "string"},
+        "navigation": {
+          "type": "object",
+          "required": ["preferred"],
+          "properties": {
+            "preferred": {
+              "type": "string",
+              "enum": ["direct_url", "menu_navigation"]
+            },
+            "url_pattern": {"type": "string"},
+            "url_redirect_behavior": {"type": "string"},
+            "url_parameters": {"type": "object"},
+            "fallback_method": {"type": "string"},
+            "menu_path": {
+              "type": "array",
+              "items": {"type": "string"}
+            },
+            "success_signal": {"type": "object"}
+          }
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["step_id", "intent", "action"],
+            "properties": {
+              "step_id": {"type": "integer", "minimum": 1},
+              "intent": {"type": "string"},
+              "element_to_find": {
+                "type": "object",
+                "properties": {
+                  "primary_role": {"type": "string"},
+                  "primary_label": {"type": "string"},
+                  "fallback_selectors": {
+                    "type": "array",
+                    "items": {"type": "string"}
+                  },
+                  "visual_description": {"type": "string"},
+                  "default_value": {"type": "string"},
+                  "enabled_when": {"type": "string"}
+                }
+              },
+              "action": {
+                "type": "string",
+                "description": "e.g., click, fill, select_option, verify_or_select"
+              },
+              "value_source": {"type": "string"},
+              "expected_outcome": {"type": "object"},
+              "conditional_on": {"type": "string"},
+              "branches": {"type": "object"},
+              "skippable_when": {"type": "string"},
+              "side_effect": {"type": "string"}
+            }
+          }
+        },
+        "verification": {"type": "object"},
+        "known_failures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["symptom", "likely_cause", "recovery"],
+            "properties": {
+              "symptom": {"type": "string"},
+              "likely_cause": {"type": "string"},
+              "recovery": {"type": "string"}
+            }
+          }
+        },
+        "estimated_duration_seconds": {"type": "integer", "minimum": 0}
+      },
+      "additionalProperties": true
+    }
+  }
+}

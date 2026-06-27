@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "graph_entry_type", "product", "object", "internal_name",
+    "display_label", "field_type", "semantic_meaning",
+    "synonyms_for_semantic_matching", "can_be_workflow_trigger",
+    "can_be_set_by_workflow"
+  ],
+  "properties": {
+    "graph_entry_type": { "const": "standard_property" },
+    "product": { "type": "string" },
+    "object": { "type": "string" },
+    "internal_name": { "type": "string" },
+    "display_label": { "type": "string" },
+    "field_type": { "type": "string" },
+    "semantic_meaning": { "type": "string" },
+    "synonyms_for_semantic_matching": { "type": "array", "items": { "type": "string" }, "minItems": 5 },
+    "can_be_workflow_trigger": { "type": "boolean" },
+    "can_be_set_by_workflow": { "type": "boolean" },
+    "auto_population_source": { "type": "string" },
+    "is_calculated": { "type": "boolean" },
+    "is_editable_manually": { "type": "boolean" },
+    "common_uses": { "type": "array" },
+    "alternatives_to_consider": { "type": "array" }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "graph_entry_type": "gotcha",
+  "product": "hubspot",
+  "gotcha_id": "workflow_re_enrollment_overwrites_manual_changes",
+  "severity": "high",
+  "the_problem": "Re-enrollment in workflows can cause automated logic to overwrite manual adjustments. If re-enrollment is enabled on a workflow that sets property values, any manual override performed by a user will be overwritten when the record next meets the re-enrollment criteria.",
+  "how_it_manifests": [
+    "Users (e.g., CSMs or sales reps) manually override a property (such as risk status or lead score), only for it to be automatically reverted upon the next workflow trigger",
+    "Users report that the system is 'broken' or ignoring their manual updates"
+  ],
+  "when_to_surface_this": [
+    "Any workflow design where an action sets a property value AND re-enrollment is enabled",
+    "Workflows managing properties that are also user-facing or actively edited by team members"
+  ],
+  "mitigation_options": [
+    "Disable re-enrollment on the workflow if automated updates should only occur once",
+    "Implement an 'override protection' boolean property that workflows check in their enrollment criteria before updating values",
+    "Educate users and document that manual edits on workflow-managed fields are temporary and subject to automated reset"
+  ]
+}

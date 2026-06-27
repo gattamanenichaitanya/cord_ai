@@ -1,0 +1,186 @@
+{
+  "graph_entry_type": "operation",
+  "product": "hubspot",
+  "operation_id": "hubspot.create_custom_property",
+  "description": "Create a new custom property on a HubSpot CRM object",
+
+  "applies_to_objects": ["contacts", "companies", "deals", "tickets", "custom_objects"],
+
+  "preconditions": [
+    "User/token has crm.schemas.{object}.write scope",
+    "Property internal name does not already exist on this object",
+    "Property group (groupName) already exists"
+  ],
+
+  "execution_methods": [
+    {
+      "method": "api",
+      "preference_rank": 1,
+      "preference_reason": "Stable, fast, no UI drift. Use this whenever available.",
+
+      "endpoint": "POST /crm/2026-03/properties/{objectType}",
+      "base_url": "https://api.hubapi.com",
+      "documentation": "https://developers.hubspot.com/docs/api-reference/latest/crm/properties/create-property",
+      "authentication": "Authorization: Bearer {HUBSPOT_PRIVATE_APP_TOKEN}",
+
+      "path_parameters": {
+        "objectType": "The plural internal name (contacts, companies, deals, tickets) — from the object entry"
+      },
+
+      "required_payload_fields": [
+        {"field": "name", "description": "Internal name. Cannot be changed after creation. Must be lowercase with underscores."},
+        {"field": "label", "description": "Display label shown in the HubSpot UI"},
+        {"field": "type", "description": "Data type. Values: string, number, date, datetime, enumeration, bool"},
+        {"field": "fieldType", "description": "UI rendering. Values: text, textarea, number, select, radio, checkbox, booleancheckbox, date, calculation_equation"},
+        {"field": "groupName", "description": "Internal name of the property group (NOT the display label). Get from groups endpoint."}
+      ],
+
+      "conditional_payload_fields": [
+        {
+          "when": "fieldType is select, radio, or checkbox",
+          "field": "options",
+          "description": "Array of {label, value, displayOrder, hidden}",
+          "example": "[{\"label\": \"Green\", \"value\": \"green\", \"displayOrder\": 1, \"hidden\": false}]"
+        },
+        {
+          "when": "type is number",
+          "field": "showCurrencySymbol",
+          "description": "Optional boolean for currency formatting"
+        }
+      ],
+
+      "optional_payload_fields": [
+        {"field": "description", "description": "Property description shown in HubSpot UI"},
+        {"field": "displayOrder", "description": "Position in property listings"},
+        {"field": "hasUniqueValue", "description": "Boolean — whether values must be unique"},
+        {"field": "formField", "description": "Whether property can be used in forms"}
+      ],
+
+      "success_response": {
+        "status_code": 201,
+        "body": "Full property object including the created internal name"
+      },
+
+      "verification": {
+        "method": "GET /crm/2026-03/properties/{objectType}/{name}",
+        "expected_status": 200,
+        "purpose": "Confirm the property exists post-creation"
+      },
+
+      "known_failures": [
+        {
+          "status_code": 409,
+          "symptom": "PROPERTY_ALREADY_EXISTS error",
+          "likely_cause": "Property with this internal name already exists (possibly archived)",
+          "recovery": "Check if the existing property meets requirements. If yes, treat as success. If no, propose a different internal name to consultant."
+        },
+        {
+          "status_code": 400,
+          "symptom": "Invalid groupName error",
+          "likely_cause": "groupName references a property group that doesn't exist on this object",
+          "recovery": "Call groups endpoint to verify available group names. Surface to consultant if group needs to be created first."
+        },
+        {
+          "status_code": 400,
+          "symptom": "Invalid type/fieldType combination",
+          "likely_cause": "Some combinations are not allowed (e.g., type=string with fieldType=number)",
+          "recovery": "Refer to capability entry's available_field_types for valid combinations."
+        },
+        {
+          "status_code": 401,
+          "symptom": "Missing scope",
+          "likely_cause": "Private App token lacks crm.schemas.{object}.write scope",
+          "recovery": "Surface as setup error — consultant needs to update Private App scopes."
+        }
+      ],
+
+      "estimated_duration_seconds": 1
+    },
+
+    {
+      "method": "ui",
+      "preference_rank": 2,
+      "preference_reason": "Fallback if API is unavailable. Primary method for products without configuration APIs (Gainsight, HighRadius).",
+
+      "navigation": {
+        "preferred": "direct_url",
+        "url_pattern": "https://app.hubspot.com/property-settings/{portal_id}/properties?type={object_type_id}&action=create",
+        "url_redirect_behavior": "URL without ?type= redirects to ?type=0-1 by default. URL without ?action=create lands on the listing page.",
+        "url_parameters": {
+          "portal_id": "From HUBSPOT_PORTAL_ID env var",
+          "object_type_id": "From object entry (contacts=0-1, companies=0-2, deals=0-3, tickets=0-5)"
+        },
+        "fallback_method": "menu_navigation",
+        "menu_path": [
+          "Settings (gear icon)",
+          "Data Management → Properties",
+          "Select object dropdown → Contact properties (or appropriate object)",
+          "Create property button (top right)"
+        ]
+      },
+
+      "steps": [
+        {
+          "step_id": 1,
+          "intent": "Enter the property label",
+          "element_to_find": {
+            "primary_role": "textbox",
+            "primary_label": "Property label",
+            "fallback_selectors": ["input[aria-label='Property label']"]
+          },
+          "action": "fill",
+          "value_source": "plan.label",
+          "side_effect": "Internal name auto-populates from label (lowercased, spaces→underscores)"
+        },
+        {
+          "step_id": 2,
+          "intent": "Select the field type",
+          "element_to_find": {
+            "primary_role": "combobox",
+            "primary_label": "Field type",
+            "default_value": "Single-line text"
+          },
+          "action": "select_option",
+          "value_source": "plan.field_type",
+          "skippable_when": "plan.field_type is 'text' (single-line text is the default)"
+        },
+        {
+          "step_id": 3,
+          "intent": "Configure field-type-specific options (if needed)",
+          "action": "configure_options",
+          "conditional_on": "field_type",
+          "branches": {
+            "select": "Click 'Edit more options' to configure dropdown options",
+            "number": "Optionally configure number format",
+            "default": "No additional configuration needed for basic types"
+          }
+        },
+        {
+          "step_id": 4,
+          "intent": "Submit the form",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Create property",
+            "fallback_selectors": ["button[data-test-id='create-property-button']"],
+            "enabled_when": "property label is filled"
+          },
+          "action": "click",
+          "expected_outcome": {
+            "modal_closes": true,
+            "toast_appears": true,
+            "property_appears_in_listing": true
+          }
+        }
+      ],
+
+      "verification": {
+        "method": "list_check",
+        "navigate_to": "https://app.hubspot.com/property-settings/{portal_id}/properties?type={object_type_id}",
+        "search_for": "plan.label",
+        "expected": "Property appears in the properties list"
+      },
+
+      "estimated_duration_seconds": 15
+    }
+  ]
+}

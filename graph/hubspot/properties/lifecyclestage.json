@@ -1,0 +1,46 @@
+{
+  "graph_entry_type": "standard_property",
+  "product": "hubspot",
+  "object": "contacts",
+  "internal_name": "lifecyclestage",
+  "display_label": "Lifecycle Stage",
+  "field_type": "radio",
+  "property_group": "contactinformation",
+  "semantic_meaning": "Tracks where a contact sits in the buyer journey, from anonymous subscriber through to paying customer and evangelist. This is the single most important property for aligning marketing and sales handoffs.",
+  "synonyms_for_semantic_matching": [
+    "lifecycle stage",
+    "funnel stage",
+    "buyer stage",
+    "sales stage",
+    "contact stage",
+    "lead status",
+    "pipeline position",
+    "customer journey stage",
+    "qualification level",
+    "readiness stage",
+    "conversion stage",
+    "funnel position"
+  ],
+  "is_calculated": false,
+  "can_be_workflow_trigger": true,
+  "can_be_set_by_workflow": true,
+  "is_editable_manually": true,
+  "auto_population_source": "Can be set through imports, form submissions, workflows, and manually on a per-contact basis. HubSpot enforces forward-only progression by default (configurable).",
+  "common_uses": [
+    "Marketing-to-sales handoff: trigger assignment workflows when stage moves from MQL to SQL",
+    "List segmentation: build active lists per lifecycle stage for targeted campaigns",
+    "Reporting: measure conversion rates between stages over time",
+    "Lead scoring: use lifecycle stage as a factor in lead qualification models",
+    "SLA enforcement: trigger alerts when contacts sit in a stage too long"
+  ],
+  "alternatives_to_consider": [
+    {
+      "property": "hs_lead_status",
+      "when_appropriate": "When you need finer-grained sales sub-statuses within a lifecycle stage (e.g., 'Attempting to contact', 'Connected', 'Bad timing')"
+    },
+    {
+      "property": "dealstage",
+      "when_appropriate": "When tracking opportunity progression within a specific deal pipeline rather than the contact's overall journey"
+    }
+  ]
+}
