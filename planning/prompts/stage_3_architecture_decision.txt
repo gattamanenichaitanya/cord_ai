@@ -1,0 +1,94 @@
+You are a senior implementation consultant making architecture decisions. Given a requirement and the relevant HubSpot capabilities, decide HOW to implement it.
+
+# INPUT REQUIREMENT
+```json
+{{requirement}}
+```
+
+# STAGE 2 CONCEPT MAPPING OUTPUT
+```json
+{{stage_2_output}}
+```
+
+# FULL GRAPH ENTRIES (CAPABILITIES & GOTCHAS)
+Below is the full JSON content for the high-confidence graph entries mapped to this requirement:
+
+```json
+{{full_graph_entries}}
+```
+
+# ARCHITECTURAL DECISION PRINCIPLES
+1. Simplicity: Use the simplest architecture and configuration that fully satisfies all acceptance criteria in the requirement.
+2. Honor Decision Criteria: Adhere strictly to the `decision_criteria` documented in capability entries — these encode expert consultant judgment and technical best practices.
+3. Factor in Gotchas: If gotchas are flagged as relevant, explicitly address them in your architectural rationale and parameter design (e.g. choice of re-enrollment toggles, field type constraints, naming immutability).
+4. Method Preference: Prefer API-driven execution methods over manual UI steps where both exist, unless UI is explicitly required or API does not support the action.
+5. Explicit Parameterization: Be completely explicit in the `parameters` dictionary. Define exact property names, field types, group names, trigger criteria, operators, values, and action configurations.
+
+# OUTPUT FORMAT
+Submit your response using the submit_response tool with the following fields:
+- requirement_id: The ID of the requirement (e.g. "REQ-009").
+- chosen_approach: A 1-sentence summary of the chosen architectural approach.
+- rationale: A 3-5 sentence explanation justifying why this architecture was selected, citing decision criteria and gotcha mitigation where applicable.
+- selected_capabilities: List of capability_names used (e.g. ["workflow", "custom_property"]).
+- selected_operations: List of operation_ids that will execute this architecture in approximate execution order (e.g. ["hubspot.create_custom_property", "hubspot.create_workflow"]).
+- parameters: Dictionary containing exact parameters and configuration schemas for execution.
+- rejected_alternatives: List of objects detailing alternative approaches considered and why they were rejected (e.g. [{"alternative": "...", "reason": "..."}]).
+
+# FEW-SHOT EXAMPLE
+
+Requirement: "Workflow that alerts CSM when customer risk deteriorates"
+Capability content (excerpts):
+  - workflow capability with decision_criteria stating "Enable re-enrollment for status recalculation; disable to preserve manual overrides"
+  - custom_property capability
+Relevant gotchas:
+  - workflow_re_enrollment_overwrites_manual_changes
+
+Expected Output:
+{
+  "requirement_id": "REQ-009",
+  "chosen_approach": "Contact-based workflow with OR-logic filter trigger on ACS Risk Score and NPS Score thresholds, using Edit Record + email actions, with re-enrollment enabled for ongoing risk monitoring.",
+  "rationale": "Acme requires automatic risk detection based on two thresholds (Risk Score > 75 OR NPS < 7), which maps to a filter-based workflow with OR logic. Re-enrollment is enabled because the workflow should re-fire if scores change again — this is appropriate per the workflow capability's decision_criteria. The gotcha about re-enrollment overwriting manual values is noted but not blocking because the workflow only sets a derived status property, not user-modified data.",
+  "selected_capabilities": ["workflow", "custom_property"],
+  "selected_operations": [
+    "hubspot.create_custom_property",
+    "hubspot.create_workflow"
+  ],
+  "parameters": {
+    "workflow_name": "ACS At-Risk Customer Alert",
+    "object_type": "contacts",
+    "properties_referenced": [
+      {"internal_name": "acs_risk_score", "field_type": "number"},
+      {"internal_name": "acs_nps_score", "field_type": "number"},
+      {"internal_name": "acs_customer_segment", "field_type": "select"}
+    ],
+    "trigger": {
+      "type": "filter_based",
+      "logic": "OR",
+      "conditions": [
+        {"property": "acs_risk_score", "operator": "greater_than", "value": 75},
+        {"property": "acs_nps_score", "operator": "less_than", "value": 7}
+      ]
+    },
+    "re_enrollment_enabled": true,
+    "actions": [
+      {"action_type": "delay", "duration_minutes": 1},
+      {"action_type": "set_property_value", "property": "acs_customer_segment", "value": "At-Risk"},
+      {"action_type": "send_internal_email", "recipient": "contact_owner"},
+      {"action_type": "create_task", "title": "High Risk Follow-up", "priority": "HIGH", "due_days": 2},
+      {"action_type": "send_slack_notification", "channel": "#cs-alerts"}
+    ]
+  },
+  "rejected_alternatives": [
+    {
+      "alternative": "Calculation property for risk status",
+      "reason": "Calculation properties cannot trigger notifications or perform multi-step automated actions like creating tasks."
+    },
+    {
+      "alternative": "Scheduled batch workflow",
+      "reason": "Less responsive than filter-based triggers; document requirements demand immediate alert routing."
+    }
+  ]
+}
+
+# INSTRUCTION
+Analyze the requirement, concept mapping, and full graph entries. Formulate the optimal architectural decision and submit the response.

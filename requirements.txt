@@ -9,3 +9,4 @@ requests
 tabulate
 sentence-transformers
 pytest
+pydantic>=2.0.0

@@ -1,0 +1,81 @@
+You are matching an implementation requirement to specific HubSpot capabilities from a structured product knowledge graph.
+
+# REQUIREMENT TO MAP
+```json
+{{requirement}}
+```
+
+# CANDIDATE GRAPH ENTRIES FROM KNOWLEDGE GRAPH
+The following candidate graph entries were retrieved via semantic vector search based on the requirement text:
+
+```json
+{{candidates_list}}
+```
+
+# TASK DEFINITION & SCORING RULES
+Evaluate each candidate entry against the requirement and assign a relevance score from 0.0 to 1.0 based on these criteria:
+- 0.9 - 1.0 (Direct Match): This entry is directly required to implement the component (e.g. the exact object, capability, operation, or relevant property/gotcha).
+- 0.6 - 0.9 (Likely Relevant): This entry is related or likely needed during implementation or architectural planning.
+- 0.3 - 0.6 (Possibly Relevant): Uncertain or weak relationship to the implementation task.
+- 0.0 - 0.3 (Not Relevant): False positive from keyword/semantic search that does not apply to this specific requirement.
+
+For each candidate evaluated, provide a one-sentence reasoning explaining why it was assigned that score.
+IMPORTANT: Filter out all candidates scored below 0.5 from the final output list.
+
+# OUTPUT FORMAT
+Provide the structured output using the submit_response tool with the following fields:
+- requirement_id: The ID of the requirement being mapped (e.g. "REQ-001").
+- interpretation: A 1-2 sentence restatement of what the requirement needs in HubSpot-specific technical terms.
+- candidates: Array of Scored and filtered CandidateGraphEntry items (only those with relevance_score >= 0.5).
+- ambiguities: List of strings highlighting any ambiguities or underspecified details in the requirement text (e.g. "Specific risk score threshold not specified in doc").
+
+# FEW-SHOT EXAMPLE
+
+Input Requirement:
+"Create a workflow that alerts the CSM when a customer's risk indicators deteriorate"
+
+Candidates from Search:
+1. ID: workflow | Type: capability | Path: graph/hubspot/capabilities/workflow.json
+   Text: Capability Name: workflow. Automating actions on records when triggers fire.
+2. ID: hubspot.create_workflow | Type: operation | Path: graph/hubspot/operations/create_workflow.json
+   Text: Operation ID: hubspot.create_workflow. Create a complete workflow end-to-end.
+3. ID: notes_last_contacted | Type: standard_property | Path: graph/hubspot/properties/notes_last_contacted.json
+   Text: Display Label: Last Contacted. Records timestamp of last outbound communication.
+4. ID: workflow_re_enrollment_overwrites_manual_changes | Type: gotcha | Path: graph/hubspot/gotchas/workflow_re_enrollment_behavior.json
+   Text: Gotcha ID: workflow_re_enrollment_overwrites_manual_changes. Re-enrollment overwrites manual updates.
+
+Expected Output:
+{
+  "requirement_id": "REQ-009",
+  "interpretation": "Need a contact-based workflow triggered by changes in risk-related properties, with internal notification and task creation actions.",
+  "candidates": [
+    {
+      "entry_id": "workflow",
+      "entry_type": "capability",
+      "file_path": "graph/hubspot/capabilities/workflow.json",
+      "relevance_score": 1.0,
+      "reasoning": "This is the core HubSpot automation capability required to build the alert logic."
+    },
+    {
+      "entry_id": "hubspot.create_workflow",
+      "entry_type": "operation",
+      "file_path": "graph/hubspot/operations/create_workflow.json",
+      "relevance_score": 1.0,
+      "reasoning": "This is the exact operational procedure used to create and configure the workflow in HubSpot."
+    },
+    {
+      "entry_id": "workflow_re_enrollment_overwrites_manual_changes",
+      "entry_type": "gotcha",
+      "file_path": "graph/hubspot/gotchas/workflow_re_enrollment_behavior.json",
+      "relevance_score": 0.7,
+      "reasoning": "This gotcha will apply if re-enrollment is enabled on the risk alert workflow."
+    }
+  ],
+  "ambiguities": [
+    "Specific risk threshold values not given in requirement",
+    "Notification channel preference unclear"
+  ]
+}
+
+# INSTRUCTION
+Perform concept mapping for the provided requirement. Evaluate all candidates, assign scores and reasoning, filter out any with scores < 0.5, and submit the response.

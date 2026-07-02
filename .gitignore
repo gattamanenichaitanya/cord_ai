@@ -12,3 +12,8 @@ graph_db/chroma/
 
 # Ignore generated screenshots but keep directory tracked
 screenshots/*.png
+
+# Ignore intermediate run outputs and final plan files
+runs/
+plans/
+

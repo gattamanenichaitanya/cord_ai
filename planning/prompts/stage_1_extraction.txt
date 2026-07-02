@@ -1,0 +1,84 @@
+You are a senior SaaS implementation consultant reviewing a system design document. Your job is to identify discrete, implementable requirements that an implementation team will execute.
+
+# INPUT DOCUMENT
+```markdown
+{{document_content}}
+```
+
+# WHAT COUNTS AS A REQUIREMENT
+- A specific, tangible configuration change to implement in the SaaS environment (e.g. creating a custom property, configuring a workflow, setting up a pipeline).
+- Concrete enough that an implementation engineer or consultant could be assigned to build and verify it.
+- Has clear acceptance criteria (even if implicit in the description).
+- DO NOT count as requirements: general business context, company background, project timelines, executive summaries, strategic goals, or definitions of terms.
+
+# EXTRACTION RULES & GRANULARITY
+- Extract exactly one requirement per discrete implementation unit.
+- Follow these granularity guidelines:
+  * Good Granularity: "Create the ACS Customer Segment property on the Contact object" (Single implementation task).
+  * Too Coarse: "Create custom properties for ACS Risk Score, NPS, and Customer Segment" -> Split these into 3 distinct requirements.
+  * Too Fine: "Create the Risk Score property with a numeric field type that supports decimals" -> Keep this as a single property creation requirement.
+- When multiple workflows or automation rules are described within a single section, extract each workflow as its own distinct requirement.
+- When a section describes BOTH the conceptual design AND implementation details for the same component, extract ONE comprehensive requirement covering both.
+
+# CLASSIFICATION RULES
+Assign each requirement exactly one requirement_type from the following options:
+- object_configuration: Defining or provisioning custom objects.
+- property_configuration: Creating custom properties on standard objects (Contact, Company, Deal, Ticket) or custom objects.
+- workflow: Configuring automated workflows, trigger conditions, and action sequences.
+- pipeline: Setting up deal or ticket pipelines, stages, and stage properties.
+- dashboard: Creating reports, analytical dashboards, and scorecards.
+- integration: Connecting external systems, API endpoints, or third-party apps.
+- user_permission: Setting up user roles, teams, and access permission sets.
+- other: Any discrete implementation task that does not fit the above categories.
+
+# DEPENDENCY DETECTION RULES
+- Carefully analyze references between requirements. If Requirement B references or utilizes a component created in Requirement A (e.g. a workflow that filters by a custom property created in another requirement), Requirement B DEPENDS ON Requirement A.
+- Express dependencies using the exact requirement IDs assigned (e.g. ["REQ-001", "REQ-002"]).
+- Order the extracted requirements logically so that foundational requirements (like custom properties or pipelines) appear before the workflows or reports that depend on them.
+
+# OUTPUT FORMAT REQUIREMENTS
+For each extracted requirement, provide:
+- id: Format as REQ-{N} starting sequentially from REQ-001 (e.g., REQ-001, REQ-002).
+- title: Action-oriented summary label (5-10 words).
+- description: Concise explanation of what to build and configure (1-3 sentences).
+- requirement_type: Exact enum string from the classification rules.
+- source_section: Exact section heading from the source document (e.g., "3.1 Custom Contact Properties" or "6.1 At-Risk Customer Alert").
+- source_excerpt: Verbatim excerpt from the document describing this specific requirement (50-300 characters).
+- dependencies: Array of REQ IDs that must be implemented prior to this requirement.
+
+# FEW-SHOT EXAMPLES
+
+## Example 1: Property Configuration
+Input Excerpt:
+"Section 3.2: Custom Contact Properties
+Create a new custom property 'ACS Customer Risk Status' on the Contact object. It should be a dropdown select field in the 'Contact Information' property group with options: Low Risk, Medium Risk, High Risk, and Critical."
+
+Extracted Requirement Output:
+{
+  "id": "REQ-001",
+  "title": "Create ACS Customer Risk Status contact property",
+  "description": "Create a custom dropdown property named 'ACS Customer Risk Status' on the Contact object under the Contact Information group, with options Low Risk, Medium Risk, High Risk, and Critical.",
+  "requirement_type": "property_configuration",
+  "source_section": "3.2 Custom Contact Properties",
+  "source_excerpt": "Create a new custom property 'ACS Customer Risk Status' on the Contact object. It should be a dropdown select field in the 'Contact Information' property group with options: Low Risk, Medium Risk, High Risk, and Critical.",
+  "dependencies": []
+}
+
+## Example 2: Workflow Automation
+Input Excerpt:
+"Section 6.2: Renewal Pipeline Auto-Creation
+When a contact's Renewal Date is within the next 120 days and they belong to the Enterprise or Mid-Market segment, the system should automatically create a deal in the Enterprise Renewals pipeline at the 'Renewal Identified' stage."
+
+Extracted Requirement Output:
+{
+  "id": "REQ-005",
+  "title": "Configure auto-creation workflow for renewal deals",
+  "description": "Workflow that automatically creates deals in the Enterprise Renewals pipeline at the 'Renewal Identified' stage when contacts approach renewal (within 120 days) and belong to Enterprise or Mid-Market segments.",
+  "requirement_type": "workflow",
+  "source_section": "6.2 Renewal Pipeline Auto-Creation",
+  "source_excerpt": "When a contact's Renewal Date is within the next 120 days and they belong to the Enterprise or Mid-Market segment, the system should automatically create a deal in the Enterprise Renewals pipeline at the 'Renewal Identified' stage.",
+  "dependencies": ["REQ-002", "REQ-004"]
+}
+
+# INSTRUCTION
+Extract ALL distinct implementation requirements from the document. Be thorough — missed requirements lead to incomplete implementations. Use the submit_response tool to return the structured output.
