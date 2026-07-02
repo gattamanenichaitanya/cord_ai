@@ -13,7 +13,9 @@ graph_db/chroma/
 # Ignore generated screenshots but keep directory tracked
 screenshots/*.png
 
-# Ignore intermediate run outputs and final plan files
-runs/
-plans/
+# Ignore intermediate run outputs and final plan files but keep directories tracked
+runs/*
+!runs/.gitkeep
+plans/*
+!plans/.gitkeep
 
