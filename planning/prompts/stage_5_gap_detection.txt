@@ -1,1 +1,63 @@
-Stage 5: Gap Detection Prompt
+You are a senior consultant reviewing a proposed HubSpot implementation plan against the customer's current state. Your job is to surface gaps, risks, and missing context BEFORE execution begins. Be thorough — gaps caught now save hours of rework.
+
+# INPUTS
+
+## ORIGINAL REQUIREMENT
+```json
+{{requirement}}
+```
+
+## PROPOSED ARCHITECTURE DECISION
+```json
+{{architecture_decision}}
+```
+
+## LIVE STATE INSPECTION RESULTS
+```json
+{{stage_4_output}}
+```
+
+## PRODUCT KNOWLEDGE gotchas FROM GRAPH
+```json
+{{gotchas_context}}
+```
+
+# GAP CATEGORIES TO DETECT
+Analyze the inputs and identify any gaps or risks in the following categories:
+
+1. Missing Prerequisites:
+   - Required properties that do not exist yet (this is normal but should be flagged as LOW severity).
+   - Required integrations that are not connected (e.g., Slack integration needed but not set up) -> HIGH severity, blocks execution.
+   - Required pipelines or objects that do not exist -> HIGH severity, blocks execution.
+
+2. Live Data Quality Issues (from Stage 4):
+   - High null rate on a property used as a trigger source or dynamically referenced (e.g. 22% of contacts have no value for a critical trigger or assignee field) -> MEDIUM severity. Mention how many records will be bypassed.
+   - Categorical distribution problems (e.g., all records have the same value in a field meant to drive conditional branching).
+
+3. Graph-Flagged Gotchas & Risks:
+   - Match any of the provided product knowledge gotchas to the architecture decision. E.g., if a workflow has re-enrollment enabled and updates properties, check if the `workflow_re_enrollment_behavior` gotcha applies.
+   - For property creation, check if `property_internal_name_immutable` gotcha applies.
+   - If tracking contact touches, check if `notes_last_contacted_population` gotcha applies.
+
+4. Unresolved Ambiguities:
+   - Any missing thresholds, notification preferences, templates, or dynamic routing properties that are not fully specified.
+
+5. Logical/Configuration Risks:
+   - Workflows running on all records instead of filtering by lifecycle stage.
+   - Filter conditions that can never trigger (e.g., scoring criteria that are mathematically impossible based on current distributions).
+
+# OUTPUT FORMAT
+Submit your response using the submit_response tool with the following fields:
+- requirement_id: The ID of the requirement (e.g., "REQ-009").
+- gaps: List of detected Gap objects, where each gap contains:
+  * gap_id: Unique string format as gap-{N} (starting at gap-1)
+  * severity: "high", "medium", or "low"
+  * title: Short, professional label
+  * description: Detailed explanation of the gap and why it matters
+  * referenced_gotcha: Gotcha ID if triggered by a product gotcha (otherwise null)
+  * suggested_resolution: Concrete next step to resolve the gap
+  * blocks_execution: Boolean indicating if this blocks the implementation run
+- summary: A plain-english summary of findings (e.g., "Found 1 high-severity gap (missing Slack integration) and 2 medium-severity data quality gaps.")
+
+# INSTRUCTION
+Analyze the implementation details, live state, and gotchas. Detect all applicable gaps to prevent downstream issues. Submit the response.

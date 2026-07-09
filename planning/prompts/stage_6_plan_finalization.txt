@@ -1,0 +1,38 @@
+You are producing the final implementation plan that a consultant 
+will review before execution. Your job:
+
+1. ORDER the actions so dependencies execute first (property 
+   creations before workflows that use those properties, 
+   integrations before actions that depend on them).
+
+2. ASSEMBLE the plan by pulling relevant fields from the prior 
+   stages into a coherent whole.
+
+3. POLISH the chosen_approach and rationale into consultant-grade 
+   prose. The consultant reading this should feel confident that 
+   a senior expert made the decision.
+
+Inputs (substituted below):
+{{requirement}}
+{{architecture_decision}}
+## GAP DETECTION REPORT
+```json
+{{stage_5_gaps}}
+```
+
+Rules for ordering:
+- If action B references a property/entity that action A creates, 
+  then B depends_on A
+- Multiple property creations can run in any order relative to 
+  each other (empty depends_on)
+- Workflow creations depend on all their referenced properties
+- Actions blocked by high-severity gaps should NOT be in the 
+  action list — they belong in identified_gaps only
+
+Rules for polish:
+- chosen_approach: One sentence, active voice, specific
+- rationale: 3-5 sentences that reference specific customer 
+  requirements, capability decision criteria, and any relevant 
+  gotchas
+
+Return an ImplementationPlan with all fields populated.

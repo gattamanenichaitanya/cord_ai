@@ -126,10 +126,6 @@ class PlanAction(BaseModel):
     estimated_duration_seconds: int
 
 
-class Stage6Output(BaseModel):
-    requirement_id: str
-    actions: list[PlanAction]  # in dependency order
-    execution_order_rationale: str
 
 
 # ────────────────────────────────────────────────

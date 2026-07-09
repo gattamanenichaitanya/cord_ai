@@ -19,3 +19,7 @@ runs/*
 plans/*
 !plans/.gitkeep
 
+# Ignore execution runs
+execution_runs/
+
+

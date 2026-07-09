@@ -5,6 +5,12 @@ from pathlib import Path
 import chromadb
 from chromadb.utils import embedding_functions
 
+os.environ["HF_TRUST_REMOTE_CODE"] = "1"
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
+
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 GRAPH_DIR = PROJECT_ROOT / "graph" / "hubspot"
 CHROMA_DIR = PROJECT_ROOT / "graph_db" / "chroma"

@@ -39,13 +39,13 @@ def get_headers():
         "Content-Type": "application/json"
     }
 
-def make_request(method, endpoint, params=None):
+def make_request(method, endpoint, params=None, json_data=None):
     url = f"{BASE_URL}{endpoint}"
     headers = get_headers()
     
     for attempt in range(2):
         try:
-            resp = requests.request(method, url, headers=headers, params=params)
+            resp = requests.request(method, url, headers=headers, params=params, json=json_data)
             
             if resp.status_code == 401:
                 raise APIError("Token is invalid or lacks required scopes")

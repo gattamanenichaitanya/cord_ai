@@ -13,7 +13,6 @@ from planning.models import (
     Gap,
     Stage5Output,
     PlanAction,
-    Stage6Output,
     ImplementationPlan,
 )
 
@@ -124,26 +123,6 @@ def test_stage_5_models():
     assert s5_restored.gaps[0].blocks_execution is True
 
 
-def test_stage_6_models():
-    action = PlanAction(
-        action_id="ACT-001",
-        operation_id="hubspot.create_custom_property",
-        description="Create customer_tier property",
-        parameters={"name": "customer_tier", "label": "Customer Tier"},
-        depends_on=[],
-        estimated_duration_seconds=15,
-    )
-    s6 = Stage6Output(
-        requirement_id="REQ-001",
-        actions=[action],
-        execution_order_rationale="Property must be created first",
-    )
-
-    json_str = s6.model_dump_json()
-    s6_restored = Stage6Output.model_validate_json(json_str)
-
-    assert len(s6_restored.actions) == 1
-    assert s6_restored.actions[0].action_id == "ACT-001"
 
 
 def test_stage_7_models():
