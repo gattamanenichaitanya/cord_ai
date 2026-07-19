@@ -23,8 +23,8 @@ def render_artifact_selector():
         else:
             tabs_data.append(f"{req_id} \u25b8")
             
-    # Left-align tabs by creating narrow columns followed by a large remainder column
-    col_widths = [1.5] * len(tabs_data) + [6.0]
+    # Calculate column widths proportional to the text length to maintain consistent gaps
+    col_widths = [max(1.0, len(label) * 0.12) for label in tabs_data] + [6.0]
     cols = st.columns(col_widths)
     
     for idx, tab_label in enumerate(tabs_data):

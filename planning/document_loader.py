@@ -63,8 +63,6 @@ def _load_docx_markdown(path: Path) -> tuple[str, str]:
                     level = 1
                 prefix = "#" * level
                 markdown_parts.append(f"{prefix} {text}")
-                if not detected_title and level == 1:
-                    detected_title = text
             elif style_name == "List Paragraph":
                 markdown_parts.append(f"- {text}")
             else:

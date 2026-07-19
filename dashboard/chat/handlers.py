@@ -78,6 +78,12 @@ def process_pending_message():
         elif intent == Intent.EXPLAIN:
             handle_explain(classified.question or user_message)
 
+        elif intent == Intent.INSPECT_HUBSPOT:
+            handle_inspect(
+                question=classified.question or user_message,
+                inspect_object=classified.inspect_object or "contacts"
+            )
+
         elif intent == Intent.EXECUTE:
             handle_execute_request()
 
@@ -375,6 +381,31 @@ def handle_explain(question: str):
     except Exception:
         add_chat_message("assistant", "That didn't go through — let's try again.")
 
+
+def handle_inspect(question: str, inspect_object: str):
+    """
+    Answer a live HubSpot state question by querying the portal directly
+    and synthesising the answer with Claude.
+
+    Runs synchronously within the existing process_pending_message window.
+    The intent classifier's acknowledgment (e.g. "Checking your live portal...")
+    is already in the chat history and will be visible on the next rerun.
+    """
+    from dashboard.chat.hubspot_qa import answer_hubspot_question
+
+    try:
+        answer = answer_hubspot_question(
+            question=question,
+            inspect_object=inspect_object or "contacts",
+            client=st.session_state.claude_client,
+        )
+        add_chat_message("assistant", answer)
+    except Exception as e:
+        add_chat_message(
+            "assistant",
+            "I tried to reach your HubSpot portal but ran into a connection issue. "
+            "Check that your API token is valid and try again."
+        )
 
 def handle_execute_request():
     """Nudge user toward the Approve & Execute button."""

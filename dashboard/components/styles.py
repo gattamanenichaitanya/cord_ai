@@ -20,9 +20,20 @@ def inject_custom_css():
     }
 
     /* Overall workspace layout tweaks */
+    header[data-testid="stHeader"] {
+        display: none !important;
+    }
+    
+    .stApp {
+        overflow: hidden !important;
+    }
     .block-container {
-        padding-top: 2rem !important;
-        padding-bottom: 2rem !important;
+        padding-top: 0rem !important;
+        padding-bottom: 0 !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+        max-height: 100vh !important;
+        overflow: hidden !important;
     }
 
     /* Distinct Sidebar/Chat column section header styling */
@@ -66,6 +77,30 @@ def inject_custom_css():
         margin-right: 15% !important;
         font-size: 0.95rem !important;
         line-height: 1.5 !important;
+    }
+
+    /* Force chat input to span 100% of column width to fix off-center alignment */
+    [data-testid="stChatInput"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Make the sidebar's vertical block a flex column filling full height */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+        display: flex !important;
+        flex-direction: column !important;
+        min-height: calc(100vh - 2rem) !important;
+    }
+
+    /* Target the Streamlit wrapper div that contains our spacer — make IT grow */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:has(> .sidebar-spacer) {
+        flex: 1 !important;
+    }
+
+    /* User profile stays at its natural size */
+    .sidebar-user-profile {
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
     </style>
     """

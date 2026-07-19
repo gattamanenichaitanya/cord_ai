@@ -170,9 +170,10 @@ class StreamlitProgressCallback:
         self._action_states[action_id]["detail"] = "Starting…"
         self._write_action(action_id)
 
-        # Narrate only for UI (multi-step) actions — the interesting ones
         if method == "UI":
-            self._narrate("Building this in the browser now — watch the window on the right. ↗")
+            self._narrate(f"Building {description[:40]}... in the browser now — watch the window on the right. ↗")
+        elif method == "API":
+            self._narrate(f"Configuring {description[:40]}... instantly via API in the background. ⚡")
 
     def on_step_start(self, action_id: str, step_id: int, intent: str):
         count = self._current_step_counts.get(action_id, 0) + 1
@@ -360,7 +361,7 @@ def _render_completed(report):
 
     if status == "success":
         st.markdown(
-            f"<h2 style='color:#065f46; font-weight:700; margin-bottom:4px;'>✓ Implementation Complete</h2>",
+            f"<h3 style='color:#065f46; margin-bottom:8px;'>✓ Implementation Complete</h3>",
             unsafe_allow_html=True
         )
         st.markdown(
@@ -396,7 +397,7 @@ def _render_completed(report):
 
     else:
         st.markdown(
-            f"<h2 style='color:#ef4444; font-weight:700; margin-bottom:4px;'>✗ Implementation Stopped</h2>",
+            f"<h3 style='color:#ef4444; margin-bottom:8px;'>✗ Implementation Stopped</h3>",
             unsafe_allow_html=True
         )
         st.markdown(
@@ -441,15 +442,7 @@ def _render_completed(report):
                 unsafe_allow_html=True,
             )
 
-    if st.button("← Back to Plan", key="exec_back"):
-        st.session_state.execution_report = None
-        # Find which req had the plan
-        plan_id = report.plan_id
-        for req_id, plan in st.session_state.get("plans", {}).items():
-            if plan.plan_id == plan_id:
-                set_canvas_focus(f"plan:{req_id}")
-                break
-        st.rerun()
+
 
 
 def _run_execution(plan, req_id: str):
@@ -460,8 +453,8 @@ def _run_execution(plan, req_id: str):
 
     # ── Header ────────────────────────────────────────────────────────────────
     st.markdown(
-        f"<h2 style='margin-bottom:4px; font-weight:700; color:#111827;'>"
-        f"Executing: {plan.requirement_title}</h2>",
+        f"<h3 style='margin-bottom: 8px; color: #111827;'>"
+        f"Executing: {plan.requirement_title}</h3>",
         unsafe_allow_html=True,
     )
     st.markdown(
@@ -526,13 +519,13 @@ def _run_execution(plan, req_id: str):
     # Summary placeholder at the bottom
     summary_ph = st.empty()
 
-    # ── Pre-create chat narration slots (3 slots: workflow start, healing, done) ──
+    # ── Pre-create chat narration slots (more slots for API narration) ──
     # These live in the canvas column since we can't write to the chat column
     # from here — but they'll also be persisted to chat_history for display after rerun.
     # We add them after a divider so they feel distinct from the checklist.
     st.markdown("<div style='height:8px;'></div>", unsafe_allow_html=True)
     narration_header = st.empty()
-    chat_slots = [st.empty() for _ in range(4)]  # up to 4 narration events
+    chat_slots = [st.empty() for _ in range(30)]  # up to 30 narration events
 
     # ── Build callback ────────────────────────────────────────────────────────
     callback = StreamlitProgressCallback(

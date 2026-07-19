@@ -19,15 +19,15 @@ def render_chat(is_empty_state=False):
         if doc:
             st.markdown(f"<div style='color: #6b7280; font-size: 0.85rem; margin-bottom: 24px; display: flex; align-items: center; justify-content: center;'><span style='border: 1px solid #e5e7eb; border-radius: 12px; padding: 4px 12px; background: white;'>📄 {doc.title} • {doc.section_count} sections</span></div>", unsafe_allow_html=True)
 
-        chat_container = st.container()
+        chat_container = st.container(height=690, border=False)
         with chat_container:
             for message in st.session_state.chat_history:
                 role = message["role"]
                 content = message["content"]
                 if role == "user":
-                    st.markdown(f"<div class='chat-bubble-user'>{content}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='chat-bubble-user'>\n\n{content}\n\n</div>", unsafe_allow_html=True)
                 else:
-                    st.markdown(f"<div class='chat-bubble-assistant'>{content}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='chat-bubble-assistant'>\n\n{content}\n\n</div>", unsafe_allow_html=True)
 
     # ── Step 2: Processing state / chat input ────────────────────────────────
     is_processing = st.session_state.get("is_processing", False)
@@ -44,7 +44,7 @@ def render_chat(is_empty_state=False):
 
     else:
         # File upload logic using st.chat_input(accept_file=True)
-        placeholder = "Attach a design document to begin..." if is_empty_state else "Ask CordAI..."
+        placeholder = "How can I help?" if is_empty_state else "Ask CordAI..."
         prompt = st.chat_input(
             placeholder,
             accept_file=True,
@@ -74,14 +74,26 @@ def render_chat(is_empty_state=False):
                 uploaded_file = prompt_files[0]
                 temp_dir = Path("scratch/temp_uploads")
                 temp_dir.mkdir(parents=True, exist_ok=True)
-                suffix = Path(uploaded_file.name).suffix
-                temp_file_path = temp_dir / f"uploaded_doc{suffix}"
+                
+                # Use the original filename instead of a hardcoded string
+                original_filename = uploaded_file.name
+                temp_file_path = temp_dir / original_filename
+                
                 with open(temp_file_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
                 try:
                     doc = load_document(str(temp_file_path))
                     st.session_state.document = doc
                     st.session_state.chat_history = []
+                    st.session_state.current_chat_title = doc.title
+                    
+                    if "recent_chats" not in st.session_state:
+                        st.session_state.recent_chats = []
+                    # Insert at the beginning, ensuring no duplicates (if desired, or just let it append)
+                    if doc.title in st.session_state.recent_chats:
+                        st.session_state.recent_chats.remove(doc.title)
+                    st.session_state.recent_chats.insert(0, doc.title)
+                    
                     add_chat_message("assistant", f"Loaded **'{doc.title}'** — {doc.section_count} sections.")
                     st.session_state.canvas_focus = "welcome"
                 except Exception as e:

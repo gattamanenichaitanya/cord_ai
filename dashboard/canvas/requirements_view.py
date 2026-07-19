@@ -12,12 +12,10 @@ def render_requirements():
         return
         
     doc_title = doc.title if doc else "Document"
-    st.markdown(f"## Requirements — {doc_title}")
+    st.markdown(f"<h3 style='margin-bottom: 8px; color: #111827;'>Requirements — {doc_title}</h3>", unsafe_allow_html=True)
     
     if requirements_data.document_summary:
-        st.markdown(f"*{requirements_data.document_summary}*")
-        
-    st.markdown("<br/>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 0.9rem; color: #4b5563; font-style: italic; margin-bottom: 12px;'>{requirements_data.document_summary}</div>", unsafe_allow_html=True)
     
     plans = st.session_state.get("plans", {})
     
@@ -53,20 +51,20 @@ def render_requirements():
             with col1:
                 # Title & Planned Checkmark
                 st.markdown(
-                    f"<h4>{req.id}: {req.title}{planned_indicator}</h4>", 
+                    f"<div style='margin-bottom: 2px; font-weight: 600; color: #111827; font-size: 0.95rem;'>{req.id}: {req.title}{planned_indicator}</div>", 
                     unsafe_allow_html=True
                 )
                 # Type pill & Section indicator
                 st.markdown(
-                    f"<span style='background-color: {bg_color}; color: {text_color}; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 500;'>{req_type}</span>"
-                    f" <span style='color: #6b7280; font-size: 0.85rem; margin-left: 10px;'>Section: {req.source_section}</span>",
+                    f"<span style='background-color: {bg_color}; color: {text_color}; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 500;'>{req_type}</span>"
+                    f" <span style='color: #6b7280; font-size: 0.75rem; margin-left: 8px;'>Section: {req.source_section}</span>",
                     unsafe_allow_html=True
                 )
             with col2:
                 # Plan this or View Plan action button
-                btn_label = "View Plan" if has_plan else "Plan this"
+                btn_label = "View Plan" if has_plan else "Plan"
                 # Offset alignment spacing
-                st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
+                st.markdown("<div style='margin-top: 0px;'></div>", unsafe_allow_html=True)
                 if st.button(btn_label, key=f"plan_btn_{req.id}"):
                     if has_plan:
                         set_canvas_focus(f"plan:{req.id}")
@@ -81,4 +79,4 @@ def render_requirements():
                 if req.dependencies:
                     st.markdown(f"**Dependencies:** {', '.join(req.dependencies)}")
             
-            st.markdown("<hr style='margin: 15px 0; border: 0; border-top: 1px solid #f3f4f6;'/>", unsafe_allow_html=True)
+            st.markdown("<hr style='margin: 4px 0 8px 0; border: 0; border-top: 1px solid #f3f4f6;'/>", unsafe_allow_html=True)

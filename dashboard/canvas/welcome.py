@@ -2,10 +2,10 @@ import streamlit as st
 
 def render_welcome():
     """Renders the default welcome screen on the canvas."""
-    st.markdown("## 🚀 Welcome to Cord AI")
+    st.markdown("## 🚀 Welcome to CordAI")
     st.markdown(
-        "Cord AI is an agentic automation platform designed to analyze business requirements "
-        "and automatically construct, test, and activate workflows on **HubSpot**."
+        "CordAI is an agentic implementation partner to analyze business requirements "
+        "and automatically construct, test, and activate any SaaS platform."
     )
     
     st.markdown("---")

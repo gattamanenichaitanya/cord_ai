@@ -31,53 +31,21 @@ with st.sidebar:
         st.session_state.requirements = None
         st.session_state.plans = {}
         st.session_state.canvas_focus = "welcome"
+        st.session_state.current_chat_title = None
         st.rerun()
         
     st.markdown("<div style='font-size: 0.75rem; font-weight: 700; color: #9ca3af; margin-top: 24px; margin-bottom: 12px; text-transform: uppercase;'>RECENT</div>", unsafe_allow_html=True)
-    st.markdown("<div style='color: #4b5563; font-size: 0.9rem; margin-bottom: 12px; padding: 8px; background: #f3f4f6; border-radius: 6px; font-weight: 500;'>Acme Corp implement...</div>", unsafe_allow_html=True)
-    st.markdown("<div style='color: #6b7280; font-size: 0.9rem; margin-bottom: 12px; padding: 8px;'>Globex renewal setup</div>", unsafe_allow_html=True)
-    st.markdown("<div style='color: #6b7280; font-size: 0.9rem; margin-bottom: 12px; padding: 8px;'>Initech data model</div>", unsafe_allow_html=True)
+    
+    # Dynamically render recent chats
+    recent_chats = st.session_state.get("recent_chats", [])
+    for chat_title in recent_chats:
+        # Style the first item slightly differently if we want, or just uniform for all
+        st.markdown(f"<div style='color: #4b5563; font-size: 0.9rem; margin-bottom: 12px; padding: 8px; background: #f3f4f6; border-radius: 6px; font-weight: 500; cursor: pointer;'>{chat_title}</div>", unsafe_allow_html=True)
 
     st.markdown("<hr style='margin: 20px 0 16px 0; border: 0; border-top: 1px solid #e5e7eb;'/>", unsafe_allow_html=True)
     
-    # Connection check (cached to prevent pinging HubSpot on every rerun)
-    if "hubspot_connected" not in st.session_state:
-        from dashboard.demo_safety import check_hubspot_connection
-        st.session_state.hubspot_connected = check_hubspot_connection()
-        
-    with st.expander("🛠️ Demo Safety & Economics", expanded=False):
-        # 1. HubSpot connection indicator
-        if st.session_state.hubspot_connected:
-            st.markdown("<div style='font-size:0.85rem; color:#10b981; font-weight:600; margin-bottom:12px;'>● HubSpot Connected</div>", unsafe_allow_html=True)
-        else:
-            st.markdown("<div style='font-size:0.85rem; color:#ef4444; font-weight:600; margin-bottom:12px;'>○ HubSpot Disconnected</div>", unsafe_allow_html=True)
-            
-        # 2. Session API cost
-        from dashboard.demo_safety import get_session_cost
-        cost = get_session_cost()
-        st.markdown(
-            f"<div style='font-size:0.82rem; color:#4b5563; margin-bottom:16px;'>"
-            f"<b>Session cost:</b> ${cost:.2f}<br/>"
-            f"<span style='font-size:0.75rem; color:#9ca3af;'>Est. LLM + Vision tokens</span>"
-            f"</div>",
-            unsafe_allow_html=True
-        )
-        
-        # 3. Reset HubSpot state
-        if st.button("Reset HubSpot state", type="secondary", use_container_width=True):
-            from dashboard.demo_safety import reset_demo_state
-            with st.spinner("Resetting..."):
-                res = reset_demo_state()
-            deleted_p = len(res["deleted_properties"])
-            deleted_w = len(res["deleted_workflows"])
-            if deleted_p or deleted_w:
-                st.success(f"Cleaned {deleted_p} properties and {deleted_w} workflows!")
-            else:
-                st.info("Nothing to clean. HubSpot is already reset.")
-            # Clear executed state
-            st.session_state.executed_plans = set()
-            st.session_state.execution_report = None
-            st.rerun()
+    st.markdown("<div class='sidebar-spacer'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-user-profile' style='display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-top: 1px solid #e5e7eb; background: #f0f2f6;'><div style='background: #3b82f6; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 600;'>JD</div><div style='display: flex; flex-direction: column;'><span style='font-size: 0.9rem; font-weight: 600; color: #111827;'>John Doe</span><span style='font-size: 0.75rem; color: #6b7280;'>john.doe@ceevaa.com</span></div></div>", unsafe_allow_html=True)
 
 # 5. Main Content Area
 if st.session_state.get("document") is None:
@@ -101,12 +69,20 @@ if st.session_state.get("document") is None:
         render_chat(is_empty_state=True)
 else:
     # ACTIVE CONVERSATION
+    chat_title = st.session_state.get("current_chat_title") or "Your AI implementation partner"
+    
     st.markdown(
-        """
+        f"""
+        <style>
+        /* Make the main horizontal block a positioning context for the divider */
+        [data-testid="stHorizontalBlock"] {{
+            position: relative !important;
+        }}
+        </style>
         <div style='margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;'>
             <span style='font-weight: 600; color: #111827;'>CordAI</span>
             <span style='color: #9ca3af; margin: 0 8px;'>•</span>
-            <span style='color: #6b7280;'>Your AI implementation partner</span>
+            <span style='color: #6b7280;'>{chat_title}</span>
         </div>
         """,
         unsafe_allow_html=True
@@ -116,6 +92,21 @@ else:
 
     with chat_col:
         render_chat(is_empty_state=False)
+        # Render the vertical divider line anchored to the right edge of the chat column
+        st.markdown(
+            """<div style="
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background-color: #e5e7eb;
+                pointer-events: none;
+            "></div>""",
+            unsafe_allow_html=True
+        )
 
     with canvas_col:
-        render_canvas()
+        with st.container(height=750, border=False):
+            render_canvas()
+

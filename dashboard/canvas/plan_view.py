@@ -87,10 +87,6 @@ def render_plan(req_id: str = None):
     st.markdown("<div style='height: 32px;'></div>", unsafe_allow_html=True)
     
     # 6. Execute Affordance
-    has_blockers = any(g.blocks_execution for g in gaps)
-    if has_blockers:
-        st.caption("Note: Some gaps block execution and may normally require manual handling, but you can still proceed for this demo.")
-        
     # Check if there is already a pending execution or if we are currently processing
     is_executing = st.session_state.get("pending_execution") is not None or st.session_state.get("is_processing", False)
     

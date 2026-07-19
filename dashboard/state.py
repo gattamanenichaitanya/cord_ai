@@ -41,6 +41,16 @@ def init_state():
     if "claude_client" not in st.session_state:
         from planning.claude_client import ClaudeClient
         st.session_state.claude_client = ClaudeClient()
+        
+    if "recent_chats" not in st.session_state:
+        st.session_state.recent_chats = [
+            "Ticket routing workflow",
+            "Globex renewal setup",
+            "Initech data model"
+        ]
+        
+    if "current_chat_title" not in st.session_state:
+        st.session_state.current_chat_title = None
 
 def add_chat_message(role: str, content: str):
     """Add a message to the chat history."""
