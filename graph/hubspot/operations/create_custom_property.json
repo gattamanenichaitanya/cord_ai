@@ -134,34 +134,65 @@
         },
         {
           "step_id": 2,
+          "intent": "Click Edit more options to open full settings wizard",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Edit more options",
+            "fallback_selectors": ["button:has-text('Edit more options')"]
+          },
+          "action": "click"
+        },
+        {
+          "step_id": 3,
+          "intent": "Select the property group",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Group",
+            "fallback_selectors": ["[data-test-id='property-group-dropdown']"]
+          },
+          "action": "select_option",
+          "value_source": "plan.group_name"
+        },
+        {
+          "step_id": 4,
+          "intent": "Click Next to proceed to field type settings",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Next",
+            "fallback_selectors": ["button:has-text('Next')"]
+          },
+          "action": "click"
+        },
+        {
+          "step_id": 5,
           "intent": "Select the field type",
           "element_to_find": {
-            "primary_role": "combobox",
+            "primary_role": "button",
             "primary_label": "Field type",
-            "default_value": "Single-line text"
+            "default_value": "Single-line text",
+            "fallback_selectors": ["[data-test-id='property-kind-dropdown']"]
           },
           "action": "select_option",
           "value_source": "plan.field_type",
           "skippable_when": "plan.field_type is 'text' (single-line text is the default)"
         },
         {
-          "step_id": 3,
-          "intent": "Configure field-type-specific options (if needed)",
-          "action": "configure_options",
-          "conditional_on": "field_type",
-          "branches": {
-            "select": "Click 'Edit more options' to configure dropdown options",
-            "number": "Optionally configure number format",
-            "default": "No additional configuration needed for basic types"
-          }
+          "step_id": 6,
+          "intent": "Click Next to proceed to validation settings",
+          "element_to_find": {
+            "primary_role": "button",
+            "primary_label": "Next",
+            "fallback_selectors": ["button:has-text('Next')"]
+          },
+          "action": "click"
         },
         {
-          "step_id": 4,
+          "step_id": 7,
           "intent": "Submit the form",
           "element_to_find": {
             "primary_role": "button",
-            "primary_label": "Create property",
-            "fallback_selectors": ["button[data-test-id='create-property-button']"],
+            "primary_label": "Create",
+            "fallback_selectors": ["button[data-test-id='create-property-button']", "button:has-text('Create')"],
             "enabled_when": "property label is filled"
           },
           "action": "click",

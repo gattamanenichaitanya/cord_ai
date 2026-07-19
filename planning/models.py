@@ -62,7 +62,7 @@ class Stage2Output(BaseModel):
 
 class ArchitectureDecision(BaseModel):
     requirement_id: str
-    chosen_approach: str  # one-sentence summary
+    approach_summary: str  # one-sentence summary, max 25 words
     rationale: str  # why this approach was chosen
     selected_capabilities: list[str]  # capability_names used
     selected_operations: list[str]  # operation_ids that will execute
@@ -101,9 +101,10 @@ class Gap(BaseModel):
     gap_id: str  # unique within this pipeline run
     severity: Severity
     title: str  # short label
-    description: str  # full explanation
+    summary: str  # ONE sentence, max 25 words
+    description: str | None = None  # full explanation (optional)
     referenced_gotcha: str | None = None  # gotcha_id if surfaced from graph
-    suggested_resolution: str
+    suggested_resolution: str | None = None
     blocks_execution: bool
 
 
@@ -142,7 +143,7 @@ class ImplementationPlan(BaseModel):
     actions: list[PlanAction]
     
     # Context for the consultant reviewing
-    chosen_approach: str
+    approach_summary: str
     rationale: str
     identified_gaps: list[Gap] = Field(default_factory=list)
     

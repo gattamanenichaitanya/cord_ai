@@ -74,6 +74,10 @@
           "element_to_find": {
             "primary_role": "listitem",
             "primary_label": "value of plan.object_label",
+            "fallback_selectors": [
+              "text='value of plan.object_label'",
+              "div:has-text('value of plan.object_label')"
+            ],
             "visual_description": "Vertical list of record types: Contact, Company, Deal, Ticket, Call, Cart, etc."
           },
           "action": "click",
@@ -121,7 +125,7 @@
         },
         {
           "step_id": 6,
-          "intent": "[Phase 3: Eligible records] Search for and select the trigger property",
+          "intent": "[Phase 3: Eligible records] Search for and select the target property",
           "element_to_find": {
             "primary_role": "searchbox",
             "primary_label": "Search in Contact properties"
@@ -138,6 +142,10 @@
           "intent": "[Phase 3: Eligible records] Verify or change the operator (defaulted based on property type)",
           "element_to_find": {
             "primary_role": "combobox",
+            "fallback_selectors": [
+              "button[data-test-id='fr-filter-operator-select']",
+              "[data-selenium-test='fr-filter-operator-select']"
+            ],
             "position": "Middle field of the criteria row"
           },
           "action": "verify_or_select",
@@ -156,6 +164,11 @@
           "intent": "[Phase 3: Eligible records] Enter the comparison value",
           "element_to_find": {
             "primary_role": "combobox_or_textbox",
+            "fallback_selectors": [
+              "input[aria-label='Enter value']",
+              "input[data-selenium-test*='input']",
+              ".FilterOperatorValueInput__GrowingContainer input"
+            ],
             "position": "Third (bottom) field of the criteria row"
           },
           "action": "fill_or_select",
@@ -250,7 +263,11 @@
               "element_to_find": {
                 "primary_role": "combobox",
                 "primary_label": "Record type",
-                "default_value": "Contact (Current object)"
+                "default_value": "Contact (Current object)",
+                "fallback_selectors": [
+                  "div[class*='FormControl']:has(label:has-text('Record type')) button",
+                  "button:has-text('Contact (Current object)')"
+                ]
               },
               "action": "verify_or_select",
               "value_source": "current_action.record_type",
@@ -263,7 +280,11 @@
               "element_to_find": {
                 "primary_role": "combobox",
                 "primary_label": "Property to edit",
-                "placeholder": "Choose a property"
+                "placeholder": "Choose a property",
+                "fallback_selectors": [
+                  "div[class*='FormControl']:has(label:has-text('Property to edit')) button",
+                  "button:has-text('Choose a property')"
+                ]
               },
               "action": "select_option",
               "value_source": "current_action.property_label"
@@ -273,7 +294,11 @@
               "applies_to_action_type": "set_property_value",
               "element_to_find": {
                 "primary_role": "combobox",
-                "primary_label": "Change type"
+                "primary_label": "Change type",
+                "fallback_selectors": [
+                  "div[class*='FormControl']:has(label:has-text('Change type')) button",
+                  "button:has-text('Replace')"
+                ]
               },
               "action": "select_option",
               "value_source": "current_action.change_type",
@@ -286,7 +311,13 @@
               "conditional_on": "current_action.change_type == 'Replace'",
               "element_to_find": {
                 "primary_label": "Choose a value",
-                "input_type_varies_by_property_field_type": true
+                "input_type_varies_by_property_field_type": true,
+                "fallback_selectors": [
+                  "div[class*='FormControl']:has(label:has-text('Choose a value')) div.CodeMirror",
+                  "div[class*='FormControl']:has(label:has-text('Choose a value')) input",
+                  "div[class*='FormControl']:has(label:has-text('Choose a value')) button",
+                  "input[aria-label='Choose a value']"
+                ]
               },
               "action": "fill_or_select",
               "value_source": "current_action.value",
@@ -368,7 +399,11 @@
           "element_to_find": {
             "primary_role": "link",
             "primary_label": "Skip to Turn On",
-            "visual_description": "Bottom-left of the Review Workflow sidebar"
+            "visual_description": "Bottom-left of the Review Workflow sidebar",
+            "fallback_selectors": [
+              "a[data-test-id=\"review-sidebar-skip\"], button[data-test-id=\"review-sidebar-skip\"]",
+              "button:has-text(\"Skip to turn on\")"
+            ]
           },
           "action": "click",
           "expected_outcome": {

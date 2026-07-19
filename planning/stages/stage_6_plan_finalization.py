@@ -33,14 +33,14 @@ def run_stage_6(
     # Ask Claude for actions + polished text in one call
     class Stage6PartialOutput(BaseModel):
         actions: list[PlanAction]
-        polished_approach: str
+        approach_summary: str
         polished_rationale: str
         execution_order_rationale: str
     
     partial, metadata = client.call_with_structured_output(
         prompt=prompt,
         output_model=Stage6PartialOutput,
-        max_tokens=4096
+        max_tokens=16384
     )
     
     # Validate dependency references
@@ -57,7 +57,7 @@ def run_stage_6(
         requirement_title=requirement.title,
         document_source=document_path,
         actions=partial.actions,
-        chosen_approach=partial.polished_approach,
+        approach_summary=partial.approach_summary,
         rationale=partial.polished_rationale,
         identified_gaps=stage_5_output.gaps,
         created_at=datetime.now(),
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     print(f"STAGE 6 FINAL IMPLEMENTATION PLAN ({target_req_id})")
     print("="*80)
     print(f"Plan ID: {plan.plan_id}")
-    print(f"Chosen Approach: {plan.chosen_approach}")
+    print(f"Approach Summary: {plan.approach_summary}")
     print(f"Rationale: {plan.rationale}")
     print("\nActions list:")
     for a in plan.actions:

@@ -1,0 +1,45 @@
+{
+  "action_id": "ACT-2",
+  "operation_id": "hubspot.create_custom_property",
+  "method_used": "ui",
+  "status": "success",
+  "started_at": "2026-07-19T15:09:14.441209",
+  "completed_at": "2026-07-19T15:09:17.442368",
+  "duration_seconds": 3.001159,
+  "steps": [
+    {
+      "step_id": 0,
+      "intent": "Navigate to target URL",
+      "status": "success",
+      "started_at": "2026-07-19T15:09:14.441225",
+      "completed_at": "2026-07-19T15:09:17.442183",
+      "error_message": null,
+      "reasoning": "Navigated to https://app.hubspot.com/property-settings/246791989",
+      "healing_attempts": 0,
+      "screenshots": [
+        {
+          "step_id": 0,
+          "filename": "dummy.png",
+          "caption": "Dummy caption",
+          "timestamp": "2026-07-19T15:09:14.440849"
+        }
+      ]
+    },
+    {
+      "step_id": 1,
+      "intent": "Click create property button",
+      "status": "success",
+      "started_at": "2026-07-19T15:09:14.441082",
+      "completed_at": "2026-07-19T15:09:14.441083",
+      "error_message": null,
+      "reasoning": null,
+      "healing_attempts": 0,
+      "screenshots": []
+    }
+  ],
+  "output_data": {},
+  "error_message": null,
+  "verification_result": {
+    "success": true
+  }
+}

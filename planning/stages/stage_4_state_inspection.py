@@ -57,6 +57,20 @@ def run_stage_4(
             seen_props.add(name)
             props_to_inspect.append({"name": name, "expected_type": p_type, "expected_group": group})
 
+    # From root parameters or payload (e.g., single property creation via API payload)
+    payload = parameters.get("payload", {})
+    root_name = parameters.get("internal_name") or parameters.get("propertyName") or parameters.get("property") or \
+                payload.get("name") or payload.get("internal_name")
+                
+    if not root_name and parameters.get("name") and ("type" in parameters or "fieldType" in parameters or "groupName" in parameters or "label" in parameters):
+        root_name = parameters.get("name")
+    
+    if root_name:
+        p_type = parameters.get("type") or parameters.get("field_type") or parameters.get("fieldType") or \
+                 payload.get("type") or payload.get("field_type") or payload.get("fieldType")
+        p_group = parameters.get("groupName") or parameters.get("group") or payload.get("groupName") or payload.get("group")
+        add_prop(root_name, p_type, p_group)
+
     # From properties_referenced
     for p in parameters.get("properties_referenced", []):
         if isinstance(p, dict):

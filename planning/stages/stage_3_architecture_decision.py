@@ -80,7 +80,7 @@ def run_stage_3(
         f.write(output.model_dump_json(indent=2))
 
     # 6. Print summary
-    print(f"Stage 3 [{requirement.id}]: Selected approach '{output.chosen_approach}'. Ops: {output.selected_operations}")
+    print(f"Stage 3 [{requirement.id}]: Selected approach '{output.approach_summary}'. Ops: {output.selected_operations}")
 
     return output
 
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     print("\n" + "="*80)
     print(f"STAGE 3 ARCHITECTURE DECISION RESULTS ({target_req.id})")
     print("="*80)
-    print(f"Chosen Approach: {s3_output.chosen_approach}\n")
+    print(f"Chosen Approach: {s3_output.approach_summary}\n")
     print(f"Rationale: {s3_output.rationale}\n")
     print(f"Selected Capabilities: {s3_output.selected_capabilities}")
     print(f"Selected Operations: {s3_output.selected_operations}\n")

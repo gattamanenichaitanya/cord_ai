@@ -8,9 +8,13 @@ will review before execution. Your job:
 2. ASSEMBLE the plan by pulling relevant fields from the prior 
    stages into a coherent whole.
 
-3. POLISH the chosen_approach and rationale into consultant-grade 
+3. POLISH the approach_summary and rationale into consultant-grade 
    prose. The consultant reading this should feel confident that 
    a senior expert made the decision.
+
+4. FORMAT action descriptions for the UI. The UI only renders 
+   action descriptions to humans, so they must be brief and 
+   business-focused.
 
 Inputs (substituted below):
 {{requirement}}
@@ -29,8 +33,14 @@ Rules for ordering:
 - Actions blocked by high-severity gaps should NOT be in the 
   action list — they belong in identified_gaps only
 
+Rules for action descriptions:
+- Each action.description MUST be plain business language, max 12 words.
+- GOOD: "Set customer segment to At-Risk"
+- BAD: "Execute hubspot.create_workflow with parameters { ... }"
+- The JSON parameters stay in action.parameters for the executor.
+
 Rules for polish:
-- chosen_approach: One sentence, active voice, specific
+- approach_summary: One sentence, max 25 words, active voice, specific business language.
 - rationale: 3-5 sentences that reference specific customer 
   requirements, capability decision criteria, and any relevant 
   gotchas

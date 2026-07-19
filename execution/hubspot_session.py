@@ -22,6 +22,12 @@ AUTH_STATE_PATH = Path(__file__).resolve().parent.parent / ".auth" / "hubspot_st
 HUBSPOT_LOGIN_URL = "https://app.hubspot.com/login"
 HUBSPOT_APP_URL = "https://app.hubspot.com"
 
+# Demo Mode window properties
+DEMO_BROWSER_POSITION = "770,0"
+DEMO_BROWSER_SIZE = "1150,1080"
+DEMO_SLOW_MO = 350
+DEFAULT_SLOW_MO = 50
+
 
 class HubSpotSession:
     """
@@ -33,15 +39,20 @@ class HubSpotSession:
             page.goto("https://app.hubspot.com/contacts/...")
     """
 
-    def __init__(self, slow_mo: int = 500):
+    def __init__(self, slow_mo: int = None, demo_mode: bool = False):
         """
         Initialize the session manager.
 
         Args:
             slow_mo: Milliseconds to wait between each Playwright action.
                      Useful for visual debugging. Set to 0 for production speed.
+            demo_mode: If True, uses DEMO_SLOW_MO and positions browser on the right.
         """
-        self.slow_mo = slow_mo
+        self.demo_mode = demo_mode
+        if slow_mo is not None:
+            self.slow_mo = slow_mo
+        else:
+            self.slow_mo = DEMO_SLOW_MO if demo_mode else DEFAULT_SLOW_MO
 
         # These are populated when entering the context manager
         self._playwright = None
@@ -88,6 +99,11 @@ class HubSpotSession:
         - Adds --disable-blink-features=AutomationControlled (prevents
           navigator.webdriver from being set to true, which Google checks)
         """
+        args = ["--disable-blink-features=AutomationControlled"]
+        if self.demo_mode:
+            args.append(f"--window-position={DEMO_BROWSER_POSITION}")
+            args.append(f"--window-size={DEMO_BROWSER_SIZE}")
+
         return self._playwright.chromium.launch(
             headless=False,
             slow_mo=self.slow_mo,
@@ -97,7 +113,7 @@ class HubSpotSession:
             ignore_default_args=["--enable-automation"],
             # Disable the AutomationControlled blink feature so that
             # navigator.webdriver is not set to true in the browser.
-            args=["--disable-blink-features=AutomationControlled"],
+            args=args,
         )
 
     def _first_time_login(self):
@@ -107,7 +123,10 @@ class HubSpotSession:
         """
         # Launch browser with no saved state
         self.browser = self._launch_browser()
-        self.context = self.browser.new_context()
+        context_args = {}
+        if self.demo_mode:
+            context_args["no_viewport"] = True
+        self.context = self.browser.new_context(**context_args)
         self.page = self.context.new_page()
 
         # Navigate to HubSpot login
@@ -143,9 +162,10 @@ class HubSpotSession:
         """
         # Launch browser and load saved state into a new context
         self.browser = self._launch_browser()
-        self.context = self.browser.new_context(
-            storage_state=str(AUTH_STATE_PATH),
-        )
+        context_args = {"storage_state": str(AUTH_STATE_PATH)}
+        if self.demo_mode:
+            context_args["no_viewport"] = True
+        self.context = self.browser.new_context(**context_args)
         self.page = self.context.new_page()
 
         # Navigate to HubSpot and check if we're still authenticated
@@ -173,3 +193,10 @@ class HubSpotSession:
             self._first_time_login()
         else:
             print("Session restored from cache.")
+
+
+if __name__ == "__main__":
+    # Allow running the script directly to initialize/refresh the login state
+    print("Initializing HubSpot Session to capture auth state...")
+    with HubSpotSession() as session:
+        print("Success! Auth state has been captured/restored.")

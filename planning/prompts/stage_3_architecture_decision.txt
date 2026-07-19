@@ -27,7 +27,7 @@ Below is the full JSON content for the high-confidence graph entries mapped to t
 # OUTPUT FORMAT
 Submit your response using the submit_response tool with the following fields:
 - requirement_id: The ID of the requirement (e.g. "REQ-009").
-- chosen_approach: A 1-sentence summary of the chosen architectural approach.
+- approach_summary: ONE sentence, max 25 words, plain business language. NO API endpoints, NO internal property names, NO field types, NO JSON. GOOD: 'Flag contacts as at-risk when risk score exceeds 75 or NPS drops below 7, then notify the owner.' BAD: 'Via the HubSpot CRM Properties API v3, create a Number-type custom contact property with internal name acs_risk_score...'
 - rationale: A 3-5 sentence explanation justifying why this architecture was selected, citing decision criteria and gotcha mitigation where applicable.
 - selected_capabilities: List of capability_names used (e.g. ["workflow", "custom_property"]).
 - selected_operations: List of operation_ids that will execute this architecture in approximate execution order (e.g. ["hubspot.create_custom_property", "hubspot.create_workflow"]).
@@ -46,7 +46,7 @@ Relevant gotchas:
 Expected Output:
 {
   "requirement_id": "REQ-009",
-  "chosen_approach": "Contact-based workflow with OR-logic filter trigger on ACS Risk Score and NPS Score thresholds, using Edit Record + email actions, with re-enrollment enabled for ongoing risk monitoring.",
+  "approach_summary": "Flag contacts as at-risk when risk score exceeds 75 or NPS drops below 7, then notify the owner.",
   "rationale": "Acme requires automatic risk detection based on two thresholds (Risk Score > 75 OR NPS < 7), which maps to a filter-based workflow with OR logic. Re-enrollment is enabled because the workflow should re-fire if scores change again — this is appropriate per the workflow capability's decision_criteria. The gotcha about re-enrollment overwriting manual values is noted but not blocking because the workflow only sets a derived status property, not user-modified data.",
   "selected_capabilities": ["workflow", "custom_property"],
   "selected_operations": [

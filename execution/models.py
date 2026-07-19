@@ -15,6 +15,17 @@ class ExecutionStatus(str, Enum):
     SKIPPED = "skipped"  # skipped due to unmet dependency
 
 
+class LocationResult(BaseModel):
+    """Result of a vision-based element location attempt."""
+    found: bool
+    reasoning: str
+    coordinates: Optional[tuple[int, int]] = None
+    bounding_box: Optional[Dict[str, int]] = None  # x, y, width, height
+    alternative_selector: Optional[str] = None
+    confidence: float
+    followup_suggestion: Optional[str] = None
+
+
 class ExecutionMethodUsed(str, Enum):
     API = "api"
     UI = "ui"
