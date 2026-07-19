@@ -13,10 +13,16 @@ def render_artifact_selector():
         
     focus = st.session_state.get("canvas_focus", "welcome")
     plans = st.session_state.get("plans", {})
+    executed_plans = st.session_state.get("executed_plans", set())
     
     # Tab list starting with "Requirements", followed by planned reqs
-    tabs_data = ["Requirements"] + [f"{req_id} \u25b8" for req_id in plans.keys()]
-    
+    tabs_data = ["Requirements"]
+    for req_id in plans.keys():
+        if req_id in executed_plans:
+            tabs_data.append(f"{req_id} \u2713")
+        else:
+            tabs_data.append(f"{req_id} \u25b8")
+            
     # Left-align tabs by creating narrow columns followed by a large remainder column
     col_widths = [1.5] * len(tabs_data) + [6.0]
     cols = st.columns(col_widths)
@@ -29,7 +35,7 @@ def render_artifact_selector():
                 target_focus = "requirements"
             else:
                 req_id = tab_label.split()[0]
-                is_active = (focus == f"plan:{req_id}")
+                is_active = (focus == f"plan:{req_id}" or (focus == "execution" and st.session_state.get("execution_report") and st.session_state.execution_report.plan_id == req_id))
                 target_focus = f"plan:{req_id}"
                 
             btn_type = "primary" if is_active else "secondary"
@@ -43,16 +49,19 @@ def render_canvas():
     """
     Renders the appropriate screen within the Canvas side of the column layout.
     """
-    # Show a spinner overlay when the agent is processing
+    # Determine which screen to render based on session state focus
+    focus = st.session_state.get("canvas_focus", "welcome")
+
+    # Show a spinner overlay when the agent is processing.
+    # EXCEPTION: skip the overlay when execution is active — the execution view
+    # manages its own live progress UI using st.empty() placeholders.
     is_processing = st.session_state.get("is_processing", False)
     pending = st.session_state.get("pending_user_message")
-    if is_processing or pending:
+    is_executing = focus == "execution"
+    if (is_processing or pending) and not is_executing:
         with st.spinner("CordAI is working on it..."):
             st.empty()
         return
-    
-    # Determine which screen to render based on session state focus
-    focus = st.session_state.get("canvas_focus", "welcome")
     
     # 1. Render selector tabs if we are not on the welcome or transient views
     if focus not in ("welcome", "planning"):

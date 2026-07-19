@@ -32,7 +32,7 @@
         {"field": "label", "description": "Display label shown in the HubSpot UI"},
         {"field": "type", "description": "Data type. Values: string, number, date, datetime, enumeration, bool"},
         {"field": "fieldType", "description": "UI rendering. Values: text, textarea, number, select, radio, checkbox, booleancheckbox, date, calculation_equation"},
-        {"field": "groupName", "description": "Internal name of the property group (NOT the display label). Get from groups endpoint."}
+        {"field": "groupName", "description": "Internal name of the property group. MUST use standard HubSpot groups: 'contactinformation' for contacts, 'companyinformation' for companies, 'dealinformation' for deals. DO NOT invent new groups."}
       ],
 
       "conditional_payload_fields": [

@@ -35,11 +35,12 @@ Categories to consider:
 1. State Conflicts & Prerequisites (based purely on Stage 4 findings):
    - DO NOT complain that a 'pre-check' wasn't performed. The Stage 4 Live State Inspection IS the pre-check. Trust its output completely.
    - If Stage 4 found an item already exists but the requirement is trying to CREATE it (e.g., creating a property that is marked "exists": true), flag it as a MEDIUM severity conflict (it will need to be updated or skipped).
+   - If a workflow with the proposed name already exists in HubSpot, flag it as a LOW or MEDIUM severity conflict, and set `blocks_execution: false` (do NOT block execution, since HubSpot allows duplicate workflow names or we can proceed anyway).
    - If a required integration is missing (e.g. Slack not connected in Stage 4) -> HIGH severity, blocks execution.
-   - If properties/workflows are missing but will be created by this requirement, flag as LOW severity (this is normal).
+   - If dependent properties or workflows are missing in HubSpot, DO NOT flag them as high-severity blockers. Assume the plan will create them dynamically as bundled actions. Flag them as LOW severity (just noting that they will be created as part of this run).
 
 2. Live Data Quality Issues (from Stage 4):
-   - High null rate on a property used as a trigger source or dynamically referenced (e.g. 22% of contacts have no value for a critical trigger or assignee field) -> MEDIUM severity. Mention how many records will be bypassed.
+   - High null rate on a property used as a trigger or dynamically referenced (e.g. 22% of contacts have no value for a critical trigger or assignee field) -> MEDIUM severity. Mention how many records will be bypassed.
    - Categorical distribution problems (e.g., all records have the same value in a field meant to drive conditional branching).
 
 3. Graph-Flagged Gotchas & Risks:

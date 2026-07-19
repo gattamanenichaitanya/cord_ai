@@ -71,29 +71,29 @@ def run_stage_4(
         p_group = parameters.get("groupName") or parameters.get("group") or payload.get("groupName") or payload.get("group")
         add_prop(root_name, p_type, p_group)
 
-    # From properties_referenced
-    for p in parameters.get("properties_referenced", []):
-        if isinstance(p, dict):
-            name = p.get("internal_name") or p.get("name")
-            add_prop(name, p.get("field_type") or p.get("type"), p.get("groupName") or p.get("group"))
-        elif isinstance(p, str):
-            add_prop(p)
+    # Recursively find all property names in parameters
+    def extract_props_recursively(obj):
+        if isinstance(obj, dict):
+            # Check common keys for property names
+            prop_name = obj.get("internal_name") or obj.get("property_internal_name") or obj.get("propertyName") or obj.get("property")
+            # If we found a string property name, add it
+            if prop_name and isinstance(prop_name, str) and not prop_name.startswith("hubspot."):
+                p_type = obj.get("type") or obj.get("field_type") or obj.get("fieldType")
+                p_group = obj.get("groupName") or obj.get("group")
+                add_prop(prop_name, p_type, p_group)
+            
+            # Continue recursion
+            for k, v in obj.items():
+                # Avoid accidentally picking up workflow names or other non-property 'name' fields unless it looks like a property
+                if k == "name" and ("type" in obj or "fieldType" in obj or "groupName" in obj or "label" in obj):
+                    if isinstance(v, str):
+                        add_prop(v, obj.get("type") or obj.get("field_type") or obj.get("fieldType"), obj.get("groupName") or obj.get("group"))
+                extract_props_recursively(v)
+        elif isinstance(obj, list):
+            for item in obj:
+                extract_props_recursively(item)
 
-    # From properties list
-    for p in parameters.get("properties", []):
-        if isinstance(p, dict):
-            name = p.get("internal_name") or p.get("name")
-            add_prop(name, p.get("field_type") or p.get("type"), p.get("groupName") or p.get("group"))
-        elif isinstance(p, str):
-            add_prop(p)
-
-    # From trigger conditions
-    trigger = parameters.get("trigger", {})
-    if isinstance(trigger, dict):
-        for cond in trigger.get("conditions", []):
-            if isinstance(cond, dict):
-                name = cond.get("property_internal_name") or cond.get("property") or cond.get("propertyName")
-                add_prop(name)
+    extract_props_recursively(parameters)
 
     # Call HubSpot API to check each property
     existing_properties_metadata = {}

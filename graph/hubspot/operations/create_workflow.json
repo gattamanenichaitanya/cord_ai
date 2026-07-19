@@ -247,7 +247,7 @@
             {
               "intent": "Select the action type",
               "action": "evaluate_branches",
-              "conditional_on": "current_action.type",
+              "conditional_on": "current_action.action_type",
               "branches": {
                 "set_property_value": {
                   "category_to_open": "CRM",

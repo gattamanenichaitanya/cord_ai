@@ -25,13 +25,11 @@ Inputs (substituted below):
 ```
 
 Rules for ordering:
-- If action B references a property/entity that action A creates, 
-  then B depends_on A
-- Multiple property creations can run in any order relative to 
-  each other (empty depends_on)
-- Workflow creations depend on all their referenced properties
-- Actions blocked by high-severity gaps should NOT be in the 
-  action list — they belong in identified_gaps only
+- The `depends_on` list MUST ONLY contain `action_id`s that belong to other actions within THIS specific plan's `actions` list. NEVER use external requirement IDs (like REQ-002) as dependencies.
+- If action B references a property/entity that action A creates (and action A is in this plan), then B depends_on A.
+- Multiple property creations can run in any order relative to each other (empty depends_on).
+- CRITICAL BUNDLING: If the workflow or main operation depends on properties that were flagged as missing, you MUST generate property creation actions (e.g., `hubspot.create_custom_property`) and place them BEFORE the workflow action in the list. Do not omit the main action; just bundle its prerequisites first.
+- The `action.operation_id` must match valid operations (e.g. `hubspot.create_custom_property`, `hubspot.create_workflow`).
 
 Rules for action descriptions:
 - Each action.description MUST be plain business language, max 12 words.

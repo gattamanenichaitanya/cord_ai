@@ -23,6 +23,7 @@ Below is the full JSON content for the high-confidence graph entries mapped to t
 3. Factor in Gotchas: If gotchas are flagged as relevant, explicitly address them in your architectural rationale and parameter design (e.g. choice of re-enrollment toggles, field type constraints, naming immutability).
 4. Method Preference: Prefer API-driven execution methods over manual UI steps where both exist, unless UI is explicitly required or API does not support the action.
 5. Explicit Parameterization: Be completely explicit in the `parameters` dictionary. Define exact property names, field types, group names, trigger criteria, operators, values, and action configurations.
+6. BUNDLE MISSING DEPENDENCIES: If this requirement depends on properties or items that you suspect might be missing, you MUST proactively include their creation operations (e.g., `hubspot.create_custom_property`) in `selected_operations` and include their full configurations in `parameters`. Do not assume they will be created by other requirements; bundle them into this plan so it can execute independently. When generating property creation parameters, the `group_name` MUST be a standard HubSpot group: 'contactinformation', 'companyinformation', or 'dealinformation'. DO NOT invent new group names like 'acs_customer_info'.
 
 # OUTPUT FORMAT
 Submit your response using the submit_response tool with the following fields:

@@ -28,6 +28,9 @@ def handle_user_message(user_message: str):
       Rerun 2 — detect pending_user_message, run the long operation,
                  clear state → rerun (user sees assistant reply)
     """
+    if st.session_state.get("is_processing", False) or st.session_state.get("pending_user_message") is not None:
+        # Queue protection: ignore user message if already processing
+        return
     # Store message and trigger rerun so user message appears immediately
     add_chat_message("user", user_message)
     st.session_state.pending_user_message = user_message
@@ -40,29 +43,34 @@ def process_pending_message():
     Runs the classification + dispatch, then clears state.
     """
     user_message = st.session_state.pending_user_message
+    st.session_state.is_processing = True
 
     try:
         # Build context
         context = _build_context()
 
         # Classify intent via Claude
-        classified = classify_intent(
-            user_message=user_message,
-            context=context,
-            client=st.session_state.claude_client
-        )
-
-        # Immediately show the acknowledgment
-        add_chat_message("assistant", classified.acknowledgment)
+        try:
+            classified = classify_intent(
+                user_message=user_message,
+                context=context,
+                client=st.session_state.claude_client
+            )
+            # Immediately show the acknowledgment
+            add_chat_message("assistant", classified.acknowledgment)
+            intent = classified.intent
+        except Exception:
+            # Claude intent classification failure
+            add_chat_message("assistant", "That didn't go through — let's try again.")
+            return
 
         # Dispatch to specific handler
-        intent = classified.intent
-
         if intent == Intent.EXTRACT_REQUIREMENTS:
             handle_extract()
 
         elif intent == Intent.PLAN_REQUIREMENT:
-            handle_plan(classified.requirement_id, classified.requirement_reference)
+            force_replan = any(kw in user_message.lower() for kw in ["re-plan", "replan", "again", "regenerate", "re-generate"])
+            handle_plan(classified.requirement_id, classified.requirement_reference, force_replan=force_replan)
 
         elif intent == Intent.SHOW_ARTIFACT:
             handle_show(classified.artifact_target)
@@ -76,16 +84,11 @@ def process_pending_message():
         else:  # UNKNOWN
             add_chat_message(
                 "assistant",
-                "I'm not sure what you'd like to do. You can ask me to:\n"
-                "- **Extract requirements** from the loaded document\n"
-                "- **Plan** a specific requirement (e.g. 'plan REQ-004')\n"
-                "- **Show** the requirements list or a specific plan\n"
-                "- **Explain** any concept or gap\n"
-                "- **Execute** when a plan is ready and approved"
+                "I'm not sure what you'd like — I can extract requirements, plan one, or explain something. What would help?"
             )
 
-    except Exception as e:
-        add_chat_message("assistant", f"Something went wrong while processing your request: {e}")
+    except Exception:
+        add_chat_message("assistant", "That didn't go through — let's try again.")
 
     finally:
         # Always clear pending state
@@ -138,7 +141,7 @@ def handle_extract():
         add_chat_message("assistant", f"Extraction failed: {e}")
 
 
-def handle_plan(requirement_id: str | None, requirement_reference: str | None):
+def handle_plan(requirement_id: str | None, requirement_reference: str | None, force_replan: bool = False):
     """Run the full Stages 2-6 planning pipeline for a requirement."""
     # ── 1. Resolve requirement ──────────────────────────────────────────────
     requirements_data = st.session_state.get("requirements")
@@ -198,12 +201,12 @@ def handle_plan(requirement_id: str | None, requirement_reference: str | None):
 
     # ── 2. Cost guard — don't re-plan unless explicitly asked ───────────────
     existing_plan = get_plan(req.id)
-    if existing_plan:
+    if existing_plan and not force_replan:
         set_canvas_focus(f"plan:{req.id}")
         add_chat_message(
             "assistant",
             f"I already have a plan for **{req.title}** — showing it now. "
-            "Say *'re-plan {req.id}'* if you'd like me to run it again."
+            f"Say *'re-plan {req.id}'* if you'd like me to run it again."
         )
         return
 
@@ -279,19 +282,27 @@ def handle_plan(requirement_id: str | None, requirement_reference: str | None):
             if gap_count > 0
             else "No blockers were flagged"
         )
+        
+        # Check for pre-existing workflow warning
+        wf_warning = ""
+        for gap in plan.identified_gaps:
+            if "workflow" in gap.title.lower() and "exist" in gap.summary.lower():
+                wf_warning = "\n\n⚠️ **Note:** A workflow with this name already exists in HubSpot. We can still proceed with creating it, but you may want to review it first."
+                break
+
         add_chat_message(
             "assistant",
             f"Done. The plan for **{req.title}** is ready. "
-            f"{gap_phrase} — take a look, and hit **Approve & Execute** when you're happy."
+            f"{gap_phrase} — take a look, and hit **Approve & Execute** when you're happy.{wf_warning}"
         )
 
-    except Exception as e:
+    except Exception:
         # Mark current running stage as error
         for s in st.session_state.planning_progress["stages"]:
             if s["status"] == "running":
                 s["status"] = "error"
         set_canvas_focus(f"requirements")
-        add_chat_message("assistant", f"Planning failed at one of the stages: {e}")
+        add_chat_message("assistant", "That didn't go through — let's try again.")
 
 
 def handle_show(artifact_target: str | None):
@@ -361,8 +372,8 @@ def handle_explain(question: str):
     try:
         answer = st.session_state.claude_client.call_text(prompt, max_tokens=512)
         add_chat_message("assistant", answer)
-    except Exception as e:
-        add_chat_message("assistant", f"I couldn't generate an explanation right now: {e}")
+    except Exception:
+        add_chat_message("assistant", "That didn't go through — let's try again.")
 
 
 def handle_execute_request():

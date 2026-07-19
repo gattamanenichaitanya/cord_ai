@@ -197,6 +197,14 @@ class UIExecutor(ExecutorBase):
 
         try:
             self.operation_entry = operation_entry
+
+            # Flatten parameters if nested under 'payload' by the planner
+            params = action.parameters
+            if "payload" in params and isinstance(params["payload"], dict):
+                merged = dict(params)
+                merged.update(params["payload"])
+                action.parameters = merged
+
             # 2. Ensure we have an active page
             await self._ensure_page()
             self.resolver = ElementResolver(self.page)
@@ -504,7 +512,8 @@ class UIExecutor(ExecutorBase):
                             
                         # 2. Check applies_to_action_type
                         applies_to = sub_step.get("applies_to_action_type")
-                        if applies_to and item.get("type") != applies_to:
+                        item_type = item.get("type", item.get("action_type"))
+                        if applies_to and item_type != applies_to:
                             continue
                             
                         # 3. Check conditional_on
@@ -542,8 +551,8 @@ class UIExecutor(ExecutorBase):
                 conditional_on = step_def.get("conditional_on", "")
                 branches = step_def.get("branches", {})
                 
-                if conditional_on == "current_action.type":
-                    branch_key = current_item.get("type", "") if current_item else ""
+                if conditional_on in ("current_action.type", "current_action.action_type"):
+                    branch_key = current_item.get("type", current_item.get("action_type", "")) if current_item else ""
                 elif conditional_on == "plan.trigger.has_additional_conditions":
                     conditions = action_params.get("trigger", {}).get("conditions", [])
                     branch_key = "additional_AND_condition" if len(conditions) > 1 else "no_additional"

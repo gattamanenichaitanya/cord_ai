@@ -91,8 +91,12 @@ def render_plan(req_id: str = None):
     if has_blockers:
         st.caption("Note: Some gaps block execution and may normally require manual handling, but you can still proceed for this demo.")
         
-    if st.button("🚀 Approve & Execute", type="primary", use_container_width=True):
+    # Check if there is already a pending execution or if we are currently processing
+    is_executing = st.session_state.get("pending_execution") is not None or st.session_state.get("is_processing", False)
+    
+    if st.button("🚀 Approve & Execute", type="primary", use_container_width=True, disabled=is_executing):
         st.session_state.pending_execution = req_id
+        st.session_state.is_processing = True # set immediately to prevent double click
         add_chat_message("user", f"Approve and execute the {plan.requirement_title} plan")
         add_chat_message("assistant", "Executing now — watch the browser.")
         set_canvas_focus("execution")

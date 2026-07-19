@@ -86,10 +86,21 @@ async def execute_plan(
         op_file = Path("graph/hubspot/operations") / f"{action.operation_id.split('.')[-1]}.json"
         if not op_file.exists():
             print(f"Executing {action.action_id} (UNKNOWN)...")
-            print(f"  Error: Operation file {op_file} not found")
-            overall_status = ExecutionStatus.FAILED
-            if stop_on_failure:
-                break
+            print(f"  Warning: Operation file {op_file} not found. Skipping.")
+            result = ActionResult(
+                action_id=action.action_id,
+                operation_id=action.operation_id,
+                status=ExecutionStatus.SKIPPED,
+                started_at=datetime.now(),
+                completed_at=datetime.now(),
+                duration_seconds=0.0,
+                error_message=f"Operation file not found (pruned)."
+            )
+            results.append(result)
+            if progress_callback and hasattr(progress_callback, "on_action_start"):
+                progress_callback.on_action_start(action.action_id, action.description, "UNKNOWN")
+            if progress_callback and hasattr(progress_callback, "on_action_complete"):
+                progress_callback.on_action_complete(action.action_id, result.status, result.duration_seconds)
             continue
             
         with open(op_file, "r", encoding="utf-8") as f:

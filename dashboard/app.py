@@ -38,6 +38,47 @@ with st.sidebar:
     st.markdown("<div style='color: #6b7280; font-size: 0.9rem; margin-bottom: 12px; padding: 8px;'>Globex renewal setup</div>", unsafe_allow_html=True)
     st.markdown("<div style='color: #6b7280; font-size: 0.9rem; margin-bottom: 12px; padding: 8px;'>Initech data model</div>", unsafe_allow_html=True)
 
+    st.markdown("<hr style='margin: 20px 0 16px 0; border: 0; border-top: 1px solid #e5e7eb;'/>", unsafe_allow_html=True)
+    
+    # Connection check (cached to prevent pinging HubSpot on every rerun)
+    if "hubspot_connected" not in st.session_state:
+        from dashboard.demo_safety import check_hubspot_connection
+        st.session_state.hubspot_connected = check_hubspot_connection()
+        
+    with st.expander("🛠️ Demo Safety & Economics", expanded=False):
+        # 1. HubSpot connection indicator
+        if st.session_state.hubspot_connected:
+            st.markdown("<div style='font-size:0.85rem; color:#10b981; font-weight:600; margin-bottom:12px;'>● HubSpot Connected</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div style='font-size:0.85rem; color:#ef4444; font-weight:600; margin-bottom:12px;'>○ HubSpot Disconnected</div>", unsafe_allow_html=True)
+            
+        # 2. Session API cost
+        from dashboard.demo_safety import get_session_cost
+        cost = get_session_cost()
+        st.markdown(
+            f"<div style='font-size:0.82rem; color:#4b5563; margin-bottom:16px;'>"
+            f"<b>Session cost:</b> ${cost:.2f}<br/>"
+            f"<span style='font-size:0.75rem; color:#9ca3af;'>Est. LLM + Vision tokens</span>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
+        
+        # 3. Reset HubSpot state
+        if st.button("Reset HubSpot state", type="secondary", use_container_width=True):
+            from dashboard.demo_safety import reset_demo_state
+            with st.spinner("Resetting..."):
+                res = reset_demo_state()
+            deleted_p = len(res["deleted_properties"])
+            deleted_w = len(res["deleted_workflows"])
+            if deleted_p or deleted_w:
+                st.success(f"Cleaned {deleted_p} properties and {deleted_w} workflows!")
+            else:
+                st.info("Nothing to clean. HubSpot is already reset.")
+            # Clear executed state
+            st.session_state.executed_plans = set()
+            st.session_state.execution_report = None
+            st.rerun()
+
 # 5. Main Content Area
 if st.session_state.get("document") is None:
     # EMPTY STATE
