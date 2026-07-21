@@ -42,10 +42,7 @@ with st.sidebar:
         # Style the first item slightly differently if we want, or just uniform for all
         st.markdown(f"<div style='color: #4b5563; font-size: 0.9rem; margin-bottom: 12px; padding: 8px; background: #f3f4f6; border-radius: 6px; font-weight: 500; cursor: pointer;'>{chat_title}</div>", unsafe_allow_html=True)
 
-    st.markdown("<hr style='margin: 20px 0 16px 0; border: 0; border-top: 1px solid #e5e7eb;'/>", unsafe_allow_html=True)
-    
-    st.markdown("<div class='sidebar-spacer'></div>", unsafe_allow_html=True)
-    st.markdown("<div class='sidebar-user-profile' style='display: flex; align-items: center; gap: 12px; padding: 16px 24px; border-top: 1px solid #e5e7eb; background: #f0f2f6;'><div style='background: #3b82f6; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 600;'>JD</div><div style='display: flex; flex-direction: column;'><span style='font-size: 0.9rem; font-weight: 600; color: #111827;'>John Doe</span><span style='font-size: 0.75rem; color: #6b7280;'>john.doe@ceevaa.com</span></div></div>", unsafe_allow_html=True)
+    st.markdown("<div class='sidebar-user-profile' style='display: flex; align-items: center; gap: 12px; padding: 16px 24px; background: #f0f2f6;'><div style='background: #3b82f6; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-weight: 600;'>JD</div><div style='display: flex; flex-direction: column;'><span style='font-size: 0.9rem; font-weight: 600; color: #111827;'>John Doe</span><span style='font-size: 0.75rem; color: #6b7280;'>john.doe@acme.com</span></div></div>", unsafe_allow_html=True)
 
 # 5. Main Content Area
 if st.session_state.get("document") is None:
@@ -79,7 +76,7 @@ else:
             position: relative !important;
         }}
         </style>
-        <div style='margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;'>
+        <div class='chat-topbar' style='margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;'>
             <span style='font-weight: 600; color: #111827;'>CordAI</span>
             <span style='color: #9ca3af; margin: 0 8px;'>•</span>
             <span style='color: #6b7280;'>{chat_title}</span>

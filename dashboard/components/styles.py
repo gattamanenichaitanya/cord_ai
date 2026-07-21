@@ -20,10 +20,19 @@ def inject_custom_css():
     }
 
     /* Overall workspace layout tweaks */
+    /* Keep stHeader itself visible (not display:none) since it also houses the
+       sidebar re-expand control when the sidebar is collapsed; only hide the
+       Deploy/menu chrome we don't want. */
     header[data-testid="stHeader"] {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stToolbarActions"],
+    [data-testid="stAppDeployButton"],
+    [data-testid="stMainMenu"] {
         display: none !important;
     }
-    
+
     .stApp {
         overflow: hidden !important;
     }
@@ -85,16 +94,46 @@ def inject_custom_css():
         max-width: 100% !important;
     }
 
-    /* Make the sidebar's vertical block a flex column filling full height */
+    /* Chain flex sizing from the sidebar's scroll container down to its vertical
+       block so the content fills the available height exactly (no overflow/scrollbar)
+       instead of being forced to a fixed viewport-based height. */
+    [data-testid="stSidebarContent"] {
+        display: flex !important;
+        flex-direction: column !important;
+        height: 100% !important;
+        overflow: hidden !important;
+    }
+    [data-testid="stSidebarUserContent"] {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
+    /* Streamlit wraps stVerticalBlock in an unlabeled div — include it in the flex chain too */
+    [data-testid="stSidebarUserContent"] > div {
+        display: flex !important;
+        flex-direction: column !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+    }
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
         display: flex !important;
         flex-direction: column !important;
-        min-height: calc(100vh - 2rem) !important;
+        flex: 1 !important;
+        min-height: 0 !important;
     }
 
-    /* Target the Streamlit wrapper div that contains our spacer — make IT grow */
-    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:has(> .sidebar-spacer) {
-        flex: 1 !important;
+    /* Push the wrapper div containing the user profile down to the bottom of the sidebar */
+    [data-testid="stSidebar"] [data-testid="stVerticalBlock"] > div:has(.sidebar-user-profile) {
+        margin-top: auto !important;
+    }
+
+    /* When the sidebar is collapsed, its floating re-expand chevron sits fixed at the
+       top-left of the header and overlaps the chat topbar's leading "CordAI" text.
+       Shift the whole main content area right (not just the topbar) so the topbar,
+       chat column, and canvas column all stay aligned with each other. */
+    [data-testid="stSidebar"][aria-expanded="false"] ~ div .block-container {
+        padding-left: calc(2rem + 40px) !important;
     }
 
     /* User profile stays at its natural size */
