@@ -1,0 +1,59 @@
+{
+  "records": [
+    {
+      "deal_id": "DEAL-4821",
+      "deal_amount": 250000,
+      "discount_pct": 22,
+      "customer_tier": "Enterprise",
+      "pricing_segment": null,
+      "approval_required": false,
+      "deal_stage": "Contract Sent",
+      "fulfillment_started": false,
+      "sales_process_complete": true
+    },
+    {
+      "deal_id": "DEAL-4920",
+      "deal_amount": 250000,
+      "discount_pct": 22,
+      "customer_tier": "Enterprise",
+      "pricing_segment": "Enterprise",
+      "approval_required": false,
+      "deal_stage": "Contract Sent",
+      "fulfillment_started": false,
+      "sales_process_complete": true
+    },
+    {
+      "deal_id": "DEAL-5033",
+      "deal_amount": 50000,
+      "discount_pct": 8,
+      "customer_tier": "SMB",
+      "pricing_segment": "SMB",
+      "approval_required": true,
+      "deal_stage": "Finance Approval",
+      "fulfillment_started": false,
+      "sales_process_complete": true
+    },
+    {
+      "deal_id": "DEAL-5101",
+      "deal_amount": 80000,
+      "discount_pct": 5,
+      "customer_tier": "SMB",
+      "pricing_segment": "SMB",
+      "approval_required": false,
+      "deal_stage": "Contract Sent",
+      "fulfillment_started": false,
+      "sales_process_complete": true
+    },
+    {
+      "deal_id": "DEAL-OK",
+      "deal_amount": 80000,
+      "discount_pct": 5,
+      "customer_tier": "SMB",
+      "pricing_segment": "SMB",
+      "approval_required": false,
+      "deal_stage": "Contract Sent",
+      "fulfillment_started": true,
+      "sales_process_complete": true
+    }
+  ]
+}

@@ -1,0 +1,124 @@
+{
+  "product": "hubspot_like",
+  "instance": "acme_cloud",
+  "nodes": [
+    {"id": "deal", "type": "CRM_OBJECT", "label": "Deal", "description": "Revenue opportunity record."},
+    {"id": "company", "type": "CRM_OBJECT", "label": "Company", "description": "Account record."},
+    {"id": "contact", "type": "CRM_OBJECT", "label": "Contact", "description": "Individual associated with a deal."},
+
+    {"id": "deal_amount", "type": "PROPERTY", "label": "Deal Amount", "description": "Deal monetary amount in USD."},
+    {"id": "discount_pct", "type": "PROPERTY", "label": "Discount %", "description": "Percentage discount on the deal."},
+    {"id": "customer_tier", "type": "PROPERTY", "label": "Customer Tier", "description": "Enterprise, Mid-Market, or SMB."},
+    {"id": "pricing_segment", "type": "PROPERTY", "label": "Pricing Segment", "description": "Derived pricing band used by discount governance."},
+    {"id": "approval_required", "type": "PROPERTY", "label": "Approval Required", "description": "Whether Finance approval is required before Contract Sent."},
+    {"id": "deal_stage", "type": "PROPERTY", "label": "Deal Stage", "description": "Current pipeline stage value."},
+    {"id": "fulfillment_started", "type": "PROPERTY", "label": "Fulfillment Started", "description": "Whether fulfillment has begun after Contract Sent."},
+    {"id": "sales_process_complete", "type": "PROPERTY", "label": "Sales Process Complete", "description": "Whether the sales process is marked complete."},
+
+    {"id": "sales_owner", "type": "PROPERTY", "label": "Sales Owner", "description": "Assigned sales owner. Unrelated to finance approval."},
+    {"id": "renewal_date", "type": "PROPERTY", "label": "Renewal Date", "description": "Contract renewal date."},
+    {"id": "nps_score", "type": "PROPERTY", "label": "NPS Score", "description": "Net promoter score."},
+    {"id": "industry", "type": "PROPERTY", "label": "Industry", "description": "Company industry."},
+    {"id": "region", "type": "PROPERTY", "label": "Region", "description": "Sales region."},
+    {"id": "partner_tier", "type": "PROPERTY", "label": "Partner Tier", "description": "Channel partner tier."},
+    {"id": "marketing_source", "type": "PROPERTY", "label": "Marketing Source", "description": "Original marketing source."},
+    {"id": "customer_health_score", "type": "PROPERTY", "label": "Customer Health Score", "description": "Account health metric."},
+    {"id": "territory_assignment", "type": "PROPERTY", "label": "Territory Assignment", "description": "Territory code."},
+    {"id": "billing_contact_email", "type": "PROPERTY", "label": "Billing Contact Email", "description": "Billing contact."},
+    {"id": "forecast_category", "type": "PROPERTY", "label": "Forecast Category", "description": "Pipeline forecast category."},
+    {"id": "close_date", "type": "PROPERTY", "label": "Close Date", "description": "Expected close date."},
+    {"id": "sla_tier", "type": "PROPERTY", "label": "SLA Tier", "description": "Support SLA. Ticket workflows only."},
+    {"id": "mrr", "type": "PROPERTY", "label": "MRR", "description": "Monthly recurring revenue."},
+    {"id": "lead_source", "type": "PROPERTY", "label": "Lead Source", "description": "Inbound lead source."},
+    {"id": "next_step", "type": "PROPERTY", "label": "Next Step", "description": "Sales next step notes."},
+
+    {"id": "derive_pricing_segment", "type": "WORKFLOW", "label": "Derive Pricing Segment", "description": "Reads customer_tier and writes pricing_segment."},
+    {"id": "discount_governance", "type": "WORKFLOW", "label": "Discount Governance", "description": "Reads deal_amount, discount_pct, pricing_segment. Writes approval_required."},
+    {"id": "deal_stage_automation", "type": "WORKFLOW", "label": "Deal Stage Automation", "description": "Reads approval_required and sales_process_complete. Writes deal_stage."},
+    {"id": "legacy_discount_override", "type": "WORKFLOW", "label": "Legacy Discount Override", "description": "Legacy writer of approval_required."},
+    {"id": "fulfillment_workflow", "type": "WORKFLOW", "label": "Fulfillment Workflow", "description": "Reads deal_stage and writes fulfillment_started."},
+    {"id": "reporting_workflow", "type": "WORKFLOW", "label": "Reporting Workflow", "description": "Reads deal_stage for reporting. Downstream consumer."},
+
+    {"id": "lead_assignment_workflow", "type": "WORKFLOW", "label": "Lead Assignment", "description": "Assigns inbound leads."},
+    {"id": "renewal_reminder_workflow", "type": "WORKFLOW", "label": "Renewal Reminder", "description": "Reminds owners of renewal_date."},
+    {"id": "billing_contact_sync", "type": "WORKFLOW", "label": "Billing Contact Sync", "description": "Syncs billing_contact_email."},
+    {"id": "owner_round_robin", "type": "WORKFLOW", "label": "Owner Round Robin", "description": "Assigns sales_owner."},
+    {"id": "close_date_nudge", "type": "WORKFLOW", "label": "Close Date Nudge", "description": "Nudges close_date slips."},
+    {"id": "ticket_sla", "type": "WORKFLOW", "label": "Ticket SLA Escalation", "description": "Escalates support tickets."},
+    {"id": "forecast_commit", "type": "WORKFLOW", "label": "Forecast Commit Sync", "description": "Writes forecast_category."},
+    {"id": "lifecycle_sync", "type": "WORKFLOW", "label": "Contact Lifecycle Sync", "description": "Copies deal_stage into contact lifecycle."},
+    {"id": "slack_won_alert", "type": "WORKFLOW", "label": "Slack Won Alert", "description": "Notifies Slack on Closed Won."},
+
+    {"id": "derive_enterprise_branch", "type": "WORKFLOW_BRANCH", "label": "Enterprise branch", "description": "Enterprise case inside derive_pricing_segment."},
+    {"id": "derive_smb_branch", "type": "WORKFLOW_BRANCH", "label": "SMB branch", "description": "SMB case inside derive_pricing_segment."},
+
+    {"id": "stage_contract_sent", "type": "PIPELINE_STAGE", "label": "Contract Sent", "description": "Late-stage pipeline value represented as a stage node."},
+    {"id": "stage_finance_approval", "type": "PIPELINE_STAGE", "label": "Finance Approval", "description": "Holding stage while Finance reviews."},
+    {"id": "stage_negotiation", "type": "PIPELINE_STAGE", "label": "Negotiation", "description": "Pre-approval commercial stage."},
+    {"id": "stage_closed_won", "type": "PIPELINE_STAGE", "label": "Closed Won", "description": "Won stage."},
+
+    {"id": "team_finance", "type": "TEAM", "label": "Finance", "description": "Approves enterprise discounts."},
+    {"id": "team_sales_ops", "type": "TEAM", "label": "Sales Ops", "description": "Owns deal workflows."},
+    {"id": "team_revops", "type": "TEAM", "label": "RevOps", "description": "Owns pipeline stages."},
+    {"id": "team_support", "type": "TEAM", "label": "Support", "description": "Owns ticket SLA workflows."},
+
+    {"id": "segment_mapper", "type": "CUSTOM_CODE", "label": "segmentMapper.js", "description": "Custom coded action inside derive_pricing_segment."},
+    {"id": "tax_calculator", "type": "CUSTOM_CODE", "label": "taxCalculator.js", "description": "Quote tax helper."},
+
+    {"id": "slack_notification_integration", "type": "INTEGRATION", "label": "Slack Sales Alerts", "description": "Outbound Slack notifications."},
+    {"id": "data_warehouse_sync", "type": "INTEGRATION", "label": "Data Warehouse Sync", "description": "Analytics warehouse sync."},
+    {"id": "billing_stripe", "type": "INTEGRATION", "label": "Billing (Stripe)", "description": "Syncs MRR."},
+    {"id": "docusign", "type": "INTEGRATION", "label": "DocuSign", "description": "Sends contracts after Contract Sent."},
+    {"id": "clearbit", "type": "INTEGRATION", "label": "Clearbit Enrichment", "description": "Writes industry."},
+
+    {"id": "CHANGE-1007", "type": "CHANGE", "label": "Enterprise branch removed", "description": "Enterprise branch removed from derive_pricing_segment."}
+  ],
+  "edges": [
+    {"from": "derive_pricing_segment", "type": "READS", "to": "customer_tier"},
+    {"from": "derive_pricing_segment", "type": "WRITES", "to": "pricing_segment"},
+    {"from": "derive_pricing_segment", "type": "CONTAINS", "to": "derive_enterprise_branch"},
+    {"from": "derive_pricing_segment", "type": "CONTAINS", "to": "derive_smb_branch"},
+    {"from": "derive_pricing_segment", "type": "CALLS", "to": "segment_mapper"},
+    {"from": "derive_enterprise_branch", "type": "READS", "to": "customer_tier"},
+    {"from": "derive_enterprise_branch", "type": "WRITES", "to": "pricing_segment"},
+    {"from": "derive_smb_branch", "type": "READS", "to": "customer_tier"},
+    {"from": "derive_smb_branch", "type": "WRITES", "to": "pricing_segment"},
+    {"from": "segment_mapper", "type": "READS", "to": "customer_tier"},
+    {"from": "segment_mapper", "type": "WRITES", "to": "pricing_segment"},
+
+    {"from": "discount_governance", "type": "READS", "to": "deal_amount"},
+    {"from": "discount_governance", "type": "READS", "to": "discount_pct"},
+    {"from": "discount_governance", "type": "READS", "to": "pricing_segment"},
+    {"from": "discount_governance", "type": "WRITES", "to": "approval_required"},
+
+    {"from": "deal_stage_automation", "type": "READS", "to": "approval_required"},
+    {"from": "deal_stage_automation", "type": "READS", "to": "sales_process_complete"},
+    {"from": "deal_stage_automation", "type": "WRITES", "to": "deal_stage"},
+
+    {"from": "legacy_discount_override", "type": "READS", "to": "discount_pct"},
+    {"from": "legacy_discount_override", "type": "WRITES", "to": "approval_required"},
+
+    {"from": "fulfillment_workflow", "type": "READS", "to": "deal_stage"},
+    {"from": "fulfillment_workflow", "type": "WRITES", "to": "fulfillment_started"},
+
+    {"from": "reporting_workflow", "type": "READS", "to": "deal_stage"},
+
+    {"from": "CHANGE-1007", "type": "MODIFIED", "to": "derive_pricing_segment"},
+    {"from": "CHANGE-1007", "type": "MODIFIED", "to": "derive_enterprise_branch"},
+
+    {"from": "owner_round_robin", "type": "WRITES", "to": "sales_owner"},
+    {"from": "renewal_reminder_workflow", "type": "READS", "to": "renewal_date"},
+    {"from": "forecast_commit", "type": "WRITES", "to": "forecast_category"},
+    {"from": "forecast_commit", "type": "READS", "to": "close_date"},
+    {"from": "close_date_nudge", "type": "READS", "to": "close_date"},
+    {"from": "ticket_sla", "type": "READS", "to": "sla_tier"},
+    {"from": "billing_contact_sync", "type": "WRITES", "to": "billing_contact_email"},
+    {"from": "lifecycle_sync", "type": "READS", "to": "deal_stage"},
+    {"from": "slack_won_alert", "type": "CALLS_OUT_TO", "to": "slack_notification_integration"},
+    {"from": "billing_stripe", "type": "WRITES", "to": "mrr"},
+    {"from": "clearbit", "type": "WRITES", "to": "industry"},
+    {"from": "data_warehouse_sync", "type": "READS", "to": "deal_amount"},
+    {"from": "tax_calculator", "type": "READS", "to": "deal_amount"},
+    {"from": "deal_stage_automation", "type": "MOVES_TO", "to": "stage_contract_sent"}
+  ]
+}

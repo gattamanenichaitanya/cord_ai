@@ -1,0 +1,28 @@
+Diagnose Chat build rollback marker
+===================================
+Created before checkpoint 1 of the grounded-chat plan.
+
+Git tag:  pre-diagnose-chat
+Commit:   66e9fa431643bc5b7e4fc188b0b0e6aeaa306d67
+          ("Fix sidebar collapse/expand and chat topbar alignment in dashboard")
+
+Note: At tag time, most of diagnosis/ and dashboard/diagnose/ were untracked.
+`git reset --hard pre-diagnose-chat` restores that commit but does NOT delete
+untracked diagnosis files.
+
+To abandon only the Diagnose Chat checkpoints, delete the files listed below
+(updated as each checkpoint lands). Do not delete the rest of diagnosis/.
+
+Chat-build files:
+  diagnosis/CHAT_BUILD_ROLLBACK.txt
+  diagnosis/conversations.py
+  diagnosis/chat_context.py
+  diagnosis/prose.py
+  diagnosis/chat_reply.py
+  dashboard/diagnose/chat.py
+  dashboard/diagnose/render.py (Chat page wiring and diagnose_conversations only)
+  tests/test_diagnosis_chat_checkpoint1.py
+  tests/test_diagnosis_chat_checkpoint2.py
+  tests/test_diagnosis_chat_checkpoint3.py
+  tests/test_diagnosis_chat_checkpoint4.py
+  tests/test_diagnosis_chat_checkpoint5.py

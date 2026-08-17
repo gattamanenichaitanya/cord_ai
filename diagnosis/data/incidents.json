@@ -1,0 +1,39 @@
+{
+  "incidents": [
+    {
+      "id": "INC-1042",
+      "deal_id": "DEAL-4821",
+      "priority": "HIGH",
+      "summary": "Finance approval bypassed on enterprise deal",
+      "text": "DEAL-4821 is a $250K enterprise deal with a 22% discount that moved to Contract Sent without Finance approval. This is not expected."
+    },
+    {
+      "id": "INC-1188",
+      "deal_id": "DEAL-4920",
+      "priority": "HIGH",
+      "summary": "Finance approval skipped with Pricing Segment correct",
+      "text": "DEAL-4920 is a $250K enterprise deal with a 22% discount that skipped Finance approval even though Pricing Segment is correct. This is not expected."
+    },
+    {
+      "id": "INC-2201",
+      "deal_id": "DEAL-5033",
+      "priority": "MED",
+      "summary": "SMB deal stuck in Finance approval",
+      "text": "DEAL-5033 is a $50K SMB deal stuck in Finance approval. This is not expected."
+    },
+    {
+      "id": "INC-3310",
+      "deal_id": "DEAL-5101",
+      "priority": "HIGH",
+      "summary": "Fulfillment did not start after Contract Sent",
+      "text": "DEAL-5101 reached Contract Sent correctly, but fulfillment never started. This is not expected."
+    },
+    {
+      "id": "INC-4401",
+      "deal_id": "DEAL-OK",
+      "priority": "LOW",
+      "summary": "Contract Sent and fulfillment completed as expected",
+      "text": "DEAL-OK reached Contract Sent and fulfillment started as expected."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+"""Diagnose mode UI."""

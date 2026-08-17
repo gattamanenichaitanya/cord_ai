@@ -1,0 +1,125 @@
+{
+  "healthy": {
+    "derive_pricing_segment": {
+      "id": "derive_pricing_segment",
+      "enabled": true,
+      "rule": {
+        "cases": [
+          {
+            "when": [
+              {"field": "customer_tier", "op": "==", "value": "Enterprise"}
+            ],
+            "then": {"field": "pricing_segment", "value": "Enterprise"}
+          },
+          {
+            "when": [
+              {"field": "customer_tier", "op": "==", "value": "SMB"}
+            ],
+            "then": {"field": "pricing_segment", "value": "SMB"}
+          }
+        ]
+      }
+    },
+    "discount_governance": {
+      "id": "discount_governance",
+      "enabled": true,
+      "rule": {
+        "all": [
+          {"field": "deal_amount", "op": ">", "value": 100000},
+          {"field": "discount_pct", "op": ">", "value": 15},
+          {"field": "pricing_segment", "op": "==", "value": "Enterprise"}
+        ],
+        "then": {"field": "approval_required", "value": true},
+        "else": {"field": "approval_required", "value": false}
+      }
+    },
+    "deal_stage_automation": {
+      "id": "deal_stage_automation",
+      "enabled": true,
+      "rule": {
+        "all": [
+          {"field": "approval_required", "op": "==", "value": false},
+          {"field": "sales_process_complete", "op": "==", "value": true}
+        ],
+        "then": {"field": "deal_stage", "value": "Contract Sent"}
+      }
+    },
+    "legacy_discount_override": {
+      "id": "legacy_discount_override",
+      "enabled": true,
+      "rule": {
+        "all": [
+          {"field": "discount_pct", "op": ">", "value": 40}
+        ],
+        "then": {"field": "approval_required", "value": true}
+      }
+    },
+    "fulfillment_workflow": {
+      "id": "fulfillment_workflow",
+      "enabled": true,
+      "rule": {
+        "all": [
+          {"field": "deal_stage", "op": "==", "value": "Contract Sent"}
+        ],
+        "then": {"field": "fulfillment_started", "value": true}
+      }
+    }
+  },
+  "overlays": {
+    "INC-1042": {
+      "derive_pricing_segment": {
+        "id": "derive_pricing_segment",
+        "enabled": true,
+        "rule": {
+          "cases": [
+            {
+              "when": [
+                {"field": "customer_tier", "op": "==", "value": "SMB"}
+              ],
+              "then": {"field": "pricing_segment", "value": "SMB"}
+            }
+          ]
+        }
+      }
+    },
+    "INC-1188": {
+      "discount_governance": {
+        "id": "discount_governance",
+        "enabled": true,
+        "rule": {
+          "all": [
+            {"field": "deal_amount", "op": ">", "value": 500000},
+            {"field": "discount_pct", "op": ">", "value": 15},
+            {"field": "pricing_segment", "op": "==", "value": "Enterprise"}
+          ],
+          "then": {"field": "approval_required", "value": true},
+          "else": {"field": "approval_required", "value": false}
+        }
+      }
+    },
+    "INC-2201": {
+      "legacy_discount_override": {
+        "id": "legacy_discount_override",
+        "enabled": true,
+        "rule": {
+          "all": [
+            {"field": "discount_pct", "op": ">", "value": 0}
+          ],
+          "then": {"field": "approval_required", "value": true}
+        }
+      }
+    },
+    "INC-3310": {
+      "fulfillment_workflow": {
+        "id": "fulfillment_workflow",
+        "enabled": false,
+        "rule": {
+          "all": [
+            {"field": "deal_stage", "op": "==", "value": "Contract Sent"}
+          ],
+          "then": {"field": "fulfillment_started", "value": true}
+        }
+      }
+    }
+  }
+}

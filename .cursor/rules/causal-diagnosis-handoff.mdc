@@ -1,0 +1,47 @@
+---
+description: Cord causal-diagnosis prototype handoff (v4). Canonical fields + LLM planner over validated actions only.
+alwaysApply: true
+---
+
+# Causal diagnosis prototype (handoff v4)
+
+Authoritative specs live in `docs/handoff/`. Read `00_README.md` first; additional files arrive incrementally (`01_PRODUCT_THESIS.md` … `06_ACCEPTANCE_TESTS.md`).
+
+**Source of truth on conflict:** `03_DIAGNOSIS_ENGINE.md` and `06_ACCEPTANCE_TESTS.md`.
+
+## Canonical field names (required)
+
+Use these **only** across graph property IDs, runtime JSON, rules, expectations, tests, and traces:
+
+`deal_amount`, `discount_pct`, `customer_tier`, `pricing_segment`, `approval_required`, `deal_stage`, `fulfillment_started`, `sales_process_complete`
+
+Do **not** use aliases (`company.tier`, `company_tier`, `amount`, `deal.amount`, `deal.stage`, etc.) in the prototype data model.
+
+## Non-negotiables
+
+- No hardcoded `incident_id → root cause`, keyword → fixed path, fixed `EDGE_ORDER`, or `current_node → next_node` maps.
+- **Do not** implement a handcrafted diagnostic-intent engine (`WHY_DID_VALUE_OCCUR` → `incoming WRITES`). Superseded in v3+.
+- Graph/fixtures may be synthetic; **diagnosis logic, planner boundaries, and traces must be real**.
+- **LLM role:** choose among **backend-generated candidate actions** only. Never invent nodes, edges, runtime values, or arbitrary tool calls.
+- **Backend role:** validate discrepancy → local neighborhood → allowed actions → validate selection → deterministic tool execution → evidence.
+- **Tests before UI:** canonical fields → graph → runtime → expectations → tools → parser → anchors → validator → candidate actions → planner → loop → trace → **acceptance tests** → Streamlit/graph viz.
+
+## Core loop
+
+```text
+Ticket → Anchors → Expectation/discrepancy validation → Local neighborhood
+→ Candidate actions (from real edges) → LLM picks one → Backend validates
+→ Deterministic tool runs → New evidence → repeat
+```
+
+## Build location
+
+- New diagnosis code under `diagnosis/` (read-only; no HubSpot writes).
+- Do not repurpose `graph/hubspot/` knowledge docs as the causal system graph.
+- Integrate UI into existing CordAI Streamlit shell (`dashboard/`) only after tests pass.
+
+## When implementing
+
+1. Read all files present under `docs/handoff/`.
+2. Follow `00_README.md` implementation order; do not skip to UI.
+3. Every hop must appear in the investigation trace with the chosen candidate action, validation result, and tool output—not ticket keywords alone.

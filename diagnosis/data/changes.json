@@ -1,0 +1,10 @@
+{
+  "changes": [
+    {
+      "id": "CHANGE-1007",
+      "modified_node_id": "derive_pricing_segment",
+      "time": "yesterday 18:42",
+      "summary": "Enterprise branch removed from workflow"
+    }
+  ]
+}

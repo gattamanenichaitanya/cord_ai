@@ -1,0 +1,49 @@
+{
+  "policies": [
+    {
+      "id": "enterprise_finance_approval_policy",
+      "applies_when": [
+        {"field": "customer_tier", "op": "==", "value": "Enterprise"},
+        {"field": "deal_amount", "op": ">", "value": 100000},
+        {"field": "discount_pct", "op": ">", "value": 15}
+      ],
+      "constraint": {
+        "before_stage": {
+          "field": "deal_stage",
+          "value": "Contract Sent"
+        },
+        "required_state": {
+          "field": "approval_required",
+          "value": true
+        }
+      },
+      "violation_summary": "Contract Sent occurred before required Finance approval."
+    },
+    {
+      "id": "fulfillment_after_contract_sent",
+      "applies_when": [
+        {"field": "deal_stage", "op": "==", "value": "Contract Sent"}
+      ],
+      "constraint": {
+        "required_state": {
+          "field": "fulfillment_started",
+          "value": true
+        }
+      },
+      "violation_summary": "Deal reached Contract Sent but fulfillment never started."
+    },
+    {
+      "id": "smb_no_finance_approval",
+      "applies_when": [
+        {"field": "customer_tier", "op": "==", "value": "SMB"}
+      ],
+      "constraint": {
+        "required_state": {
+          "field": "approval_required",
+          "value": false
+        }
+      },
+      "violation_summary": "SMB deal is in Finance approval even though the enterprise threshold does not apply."
+    }
+  ]
+}

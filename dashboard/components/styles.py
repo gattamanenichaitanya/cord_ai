@@ -5,7 +5,7 @@ def inject_custom_css():
     css = """
     <style>
     /* Styling for primary accent buttons (teal/professional blue) */
-    div.stButton > button:first-child {
+    div.stButton > button:first-child:not([kind="tertiary"]):not([data-testid="stBaseButton-tertiary"]) {
         background-color: #0f766e !important;
         color: white !important;
         border-radius: 6px !important;
@@ -13,10 +13,53 @@ def inject_custom_css():
         font-weight: 500 !important;
         transition: all 0.2s ease-in-out !important;
     }
-    div.stButton > button:first-child:hover {
+    div.stButton > button:first-child:not([kind="tertiary"]):not([data-testid="stBaseButton-tertiary"]):hover {
         background-color: #0d9488 !important;
         border-color: #0d9488 !important;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Tertiary buttons render as in-page links (ticket IDs). */
+    div.stButton > button[kind="tertiary"],
+    div.stButton > button[data-testid="stBaseButton-tertiary"] {
+        background: transparent !important;
+        background-color: transparent !important;
+        color: #2563eb !important;
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        min-height: auto !important;
+        height: auto !important;
+        padding: 0 !important;
+        font-weight: 600 !important;
+        text-decoration: underline !important;
+        text-underline-offset: 2px !important;
+    }
+    div.stButton > button[kind="tertiary"]:hover,
+    div.stButton > button[data-testid="stBaseButton-tertiary"]:hover {
+        background: transparent !important;
+        color: #1d4ed8 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    /* Diagnose sidebar conversation titles: plain text, not teal nav buttons. */
+    [data-testid="stSidebar"] div.stButton > button[kind="tertiary"],
+    [data-testid="stSidebar"] div.stButton > button[data-testid="stBaseButton-tertiary"] {
+        color: #4b5563 !important;
+        font-weight: 500 !important;
+        text-decoration: none !important;
+        text-align: left !important;
+        justify-content: flex-start !important;
+        width: 100% !important;
+        white-space: normal !important;
+        line-height: 1.35 !important;
+        padding: 6px 0 !important;
+    }
+    [data-testid="stSidebar"] div.stButton > button[kind="tertiary"]:hover,
+    [data-testid="stSidebar"] div.stButton > button[data-testid="stBaseButton-tertiary"]:hover {
+        color: #111827 !important;
+        text-decoration: none !important;
     }
 
     /* Overall workspace layout tweaks */
@@ -140,6 +183,19 @@ def inject_custom_css():
     .sidebar-user-profile {
         width: 100% !important;
         box-sizing: border-box !important;
+    }
+
+    .diagnose-prose-alert {
+        background: #e8f4fd;
+        border: 1px solid #b6d4fe;
+        border-radius: 0.5rem;
+        padding: 1rem 1.15rem;
+        color: #1e3a5f;
+        font-size: 1rem;
+        font-family: inherit;
+        font-variant-numeric: normal;
+        line-height: 1.55;
+        white-space: normal;
     }
     </style>
     """
