@@ -102,7 +102,7 @@ class ConversationStore:
     @classmethod
     def revive(cls, existing: object | None) -> ConversationStore:
         """Rebuild after a code reload so Streamlit session objects pick up new methods."""
-        if isinstance(existing, cls) and hasattr(existing, "list_saved_threads"):
+        if isinstance(existing, cls) and hasattr(existing, "switch_incident"):
             return existing
         revived = cls()
         threads = getattr(existing, "_threads", None)
@@ -141,3 +141,16 @@ class ConversationStore:
         thread.incident_id = incident_id
         refresh_title(thread)
         return thread
+
+    def switch_incident(self, incident_id: str | None) -> ConversationThread:
+        """Move to a thread for this ticket. Do not keep another ticket's messages."""
+        active = self.active_thread()
+        if active.incident_id == incident_id:
+            return active
+        for thread in self.list_threads():
+            if thread.incident_id == incident_id:
+                return self.switch_thread(thread.id)
+        if not active.messages:
+            return self.set_incident(incident_id)
+        self.start_new_chat()
+        return self.set_incident(incident_id)

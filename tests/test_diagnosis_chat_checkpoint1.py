@@ -61,6 +61,19 @@ def test_title_updates_after_first_user_message():
     assert store.active_thread().title.startswith("INC-1042")
 
 
+def test_switch_incident_does_not_carry_other_ticket_messages():
+    store = ConversationStore()
+    store.set_incident("INC-2201")
+    store.append_message("user", "Why was this deal approved?")
+    store.append_message("assistant", "Legacy discount override wrote approval required.")
+    store.switch_incident("INC-4401")
+    active = store.active_thread()
+    assert active.incident_id == "INC-4401"
+    assert active.messages == []
+    store.switch_incident("INC-2201")
+    assert store.active_thread().messages[0].content == "Why was this deal approved?"
+
+
 def test_conversations_module_does_not_touch_implement_chat():
     source = Path("diagnosis/conversations.py").read_text(encoding="utf-8")
     assert "import streamlit" not in source

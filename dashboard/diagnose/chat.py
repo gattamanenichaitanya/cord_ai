@@ -87,8 +87,10 @@ def render_diagnose_chat() -> None:
     chosen = st.selectbox("Context ticket", options, index=index, key=f"chat_ticket_{thread.id}")
     incident_id = None if chosen == NONE_TICKET else chosen
     if incident_id != thread.incident_id:
-        store.set_incident(incident_id)
-        thread = store.active_thread()
+        store.switch_incident(incident_id)
+        if incident_id:
+            st.session_state.diagnose_incident_id = incident_id
+        st.rerun()
     if incident_id:
         st.session_state.diagnose_incident_id = incident_id
 

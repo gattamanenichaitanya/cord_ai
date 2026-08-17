@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 
 from planning.claude_client import ClaudeClient
 from planning.models import ExtractedRequirement, Stage2Output, ArchitectureDecision
+from implement.logutil import emit
 
 
 class StageOutputWarning(Exception):
@@ -19,6 +20,7 @@ def run_stage_3(
     run_dir: Path,
     graph_root: Path = Path("graph/hubspot")
 ) -> ArchitectureDecision:
+    emit(f"Stage 3 start [{requirement.id}] '{requirement.title}'")
     project_root = Path(__file__).resolve().parent.parent.parent
     prompt_path = project_root / "planning" / "prompts" / "stage_3_architecture_decision.txt"
 
@@ -80,7 +82,10 @@ def run_stage_3(
         f.write(output.model_dump_json(indent=2))
 
     # 6. Print summary
-    print(f"Stage 3 [{requirement.id}]: Selected approach '{output.approach_summary}'. Ops: {output.selected_operations}")
+    emit(
+        f"Stage 3 complete [{requirement.id}] approach='{output.approach_summary}' "
+        f"operations={output.selected_operations}"
+    )
 
     return output
 

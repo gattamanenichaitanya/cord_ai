@@ -3,6 +3,7 @@ from uuid import uuid4
 from pathlib import Path
 from pydantic import BaseModel
 from planning.models import PlanAction, ImplementationPlan
+from implement.logutil import emit
 
 
 def run_stage_6(
@@ -18,6 +19,8 @@ def run_stage_6(
     Combined dependency resolution + plan synthesis.
     Replaces the previous Stage 6 and Stage 7.
     """
+    
+    emit(f"Stage 6 start [{requirement.id}]")
     
     # Load the prompt template
     prompt_template = Path("planning/prompts/stage_6_plan_finalization.txt").read_text()
@@ -74,9 +77,10 @@ def run_stage_6(
     plan_path = run_dir / "stage_6_final_plan.json"
     plan_path.write_text(plan.model_dump_json(indent=2), encoding="utf-8")
     
-    print(f"Stage 6 [Plan Finalization]: {len(plan.actions)} actions ordered, "
-          f"{len(plan.identified_gaps)} gaps carried forward. "
-          f"Cost: ${metadata.get('cost', 0):.3f}")
+    emit(
+        f"Stage 6 complete [{requirement.id}] plan_id={plan.plan_id} "
+        f"actions={len(plan.actions)} gaps={len(plan.identified_gaps)}"
+    )
     
     return plan
 

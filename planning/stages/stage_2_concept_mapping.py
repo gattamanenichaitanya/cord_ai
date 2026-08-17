@@ -6,6 +6,7 @@ from typing import Dict, Any, List
 from graph_db.search import search_graph
 from planning.claude_client import ClaudeClient
 from planning.models import ExtractedRequirement, Stage2Output
+from implement.logutil import emit
 
 
 def run_stage_2(
@@ -13,6 +14,7 @@ def run_stage_2(
     client: ClaudeClient,
     run_dir: Path
 ) -> Stage2Output:
+    emit(f"Stage 2 start [{requirement.id}] '{requirement.title}'")
     project_root = Path(__file__).resolve().parent.parent.parent
     prompt_path = project_root / "planning" / "prompts" / "stage_2_concept_mapping.txt"
 
@@ -27,6 +29,7 @@ def run_stage_2(
     # 2. Run search_graph and 3. Deduplicate
     candidate_map: Dict[str, Dict[str, Any]] = {}
     for q in queries:
+        emit(f"Stage 2 graph search query='{q[:80]}'")
         results = search_graph(q, n_results=10)
         for r in results:
             entry_id = r["metadata"]["entry_id"]
@@ -41,6 +44,7 @@ def run_stage_2(
                 }
 
     sorted_candidates = sorted(candidate_map.values(), key=lambda x: x["distance"])[:15]
+    emit(f"Stage 2 graph search unique_candidates={len(sorted_candidates)}")
 
     # 4. Compose prompt
     req_json_str = requirement.model_dump_json(indent=2)
@@ -65,7 +69,10 @@ def run_stage_2(
 
     # 7. Print summary
     selected_count = len(output.candidates)
-    print(f"Stage 2 [{requirement.id}]: Considered {len(sorted_candidates)} candidates, selected {selected_count} with confidence >= 0.5")
+    emit(
+        f"Stage 2 complete [{requirement.id}] candidates={len(sorted_candidates)} "
+        f"selected={selected_count} interpretation={output.interpretation[:80]}"
+    )
 
     return output
 

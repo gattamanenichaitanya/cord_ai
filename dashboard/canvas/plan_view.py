@@ -1,5 +1,6 @@
 import streamlit as st
 from dashboard.state import get_plan, add_chat_message, set_canvas_focus
+from implement.logutil import emit
 
 def render_plan(req_id: str = None):
     """Renders implementation plan details and technical actions."""
@@ -91,7 +92,10 @@ def render_plan(req_id: str = None):
     is_executing = st.session_state.get("pending_execution") is not None or st.session_state.get("is_processing", False)
     
     if st.button("🚀 Approve & Execute", type="primary", use_container_width=True, disabled=is_executing):
+        emit(f"Approve & Execute clicked plan={plan.plan_id} req={req_id} actions={len(plan.actions)}")
         st.session_state.pending_execution = req_id
+        st.session_state.execution_error = None
+        st.session_state.execution_report = None
         st.session_state.is_processing = True # set immediately to prevent double click
         add_chat_message("user", f"Approve and execute the {plan.requirement_title} plan")
         add_chat_message("assistant", "Executing now — watch the browser.")

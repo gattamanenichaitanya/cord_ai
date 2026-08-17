@@ -5,6 +5,7 @@ from typing import Dict, Any, List
 
 from planning.claude_client import ClaudeClient
 from planning.models import ExtractedRequirement, ArchitectureDecision, Stage4Output, Stage5Output
+from implement.logutil import emit
 
 
 def run_stage_5(
@@ -15,6 +16,7 @@ def run_stage_5(
     run_dir: Path,
     graph_root: Path = Path("graph/hubspot")
 ) -> Stage5Output:
+    emit(f"Stage 5 start [{requirement.id}]")
     project_root = Path(__file__).resolve().parent.parent.parent
     prompt_path = project_root / "planning" / "prompts" / "stage_5_gap_detection.txt"
 
@@ -65,7 +67,7 @@ def run_stage_5(
     with open(out_file, "w", encoding="utf-8") as f:
         f.write(output.model_dump_json(indent=2))
 
-    print(f"Stage 5 [{requirement.id}]: {output.summary}")
+    emit(f"Stage 5 complete [{requirement.id}] gaps={len(output.gaps)} summary={output.summary[:100]}")
     return output
 
 

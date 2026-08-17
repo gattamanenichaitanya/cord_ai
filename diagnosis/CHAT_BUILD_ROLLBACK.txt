@@ -18,7 +18,7 @@ Chat-build files:
   diagnosis/conversations.py
   diagnosis/chat_context.py
   diagnosis/prose.py
-  diagnosis/chat_reply.py
+  diagnosis/logutil.py
   dashboard/diagnose/chat.py
   dashboard/diagnose/render.py (Chat page wiring and diagnose_conversations only)
   tests/test_diagnosis_chat_checkpoint1.py

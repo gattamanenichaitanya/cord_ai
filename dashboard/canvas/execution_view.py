@@ -13,13 +13,54 @@ Architecture:
   4. After execute_plan() returns, st.rerun() shows the final completed state.
 """
 import asyncio
+import threading
 import time
+import traceback
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import streamlit as st
 
 from dashboard.state import add_chat_message, set_canvas_focus
+from implement.logutil import emit
+
+
+def _run_execute_plan(**kwargs):
+    """Run execute_plan even if Streamlit already has an asyncio loop running."""
+    from execution.orchestrator import execute_plan
+
+    try:
+        asyncio.get_running_loop()
+        loop_running = True
+    except RuntimeError:
+        loop_running = False
+
+    if not loop_running:
+        emit("Orchestrator starting via asyncio.run")
+        return asyncio.run(execute_plan(**kwargs))
+
+    emit("Orchestrator starting on a dedicated thread (event loop already running)")
+    holder: Dict[str, Any] = {}
+
+    def _runner():
+        try:
+            try:
+                from streamlit.runtime.scriptrunner import add_script_run_ctx, get_script_run_ctx
+                ctx = get_script_run_ctx()
+                if ctx is not None:
+                    add_script_run_ctx(threading.current_thread(), ctx)
+            except Exception:
+                pass
+            holder["result"] = asyncio.run(execute_plan(**kwargs))
+        except Exception as exc:
+            holder["error"] = exc
+
+    thread = threading.Thread(target=_runner, name="cord-execute-plan", daemon=True)
+    thread.start()
+    thread.join()
+    if "error" in holder:
+        raise holder["error"]
+    return holder.get("result")
 
 
 # ── Status icons and colors ───────────────────────────────────────────────────
@@ -164,6 +205,7 @@ class StreamlitProgressCallback:
     # ── Callback interface ────────────────────────────────────────────────────
 
     def on_action_start(self, action_id: str, description: str, method: str):
+        emit(f"Canvas action start {action_id} [{method}] {description[:80]}")
         self._methods[action_id] = method
         self._start_times[action_id] = time.time()
         self._action_states[action_id]["status"] = "running"
@@ -176,6 +218,7 @@ class StreamlitProgressCallback:
             self._narrate(f"Configuring {description[:40]}... instantly via API in the background. ⚡")
 
     def on_step_start(self, action_id: str, step_id: int, intent: str):
+        emit(f"Canvas step start {action_id} step={step_id} {intent[:80]}")
         count = self._current_step_counts.get(action_id, 0) + 1
         self._current_step_counts[action_id] = count
         self._action_states[action_id]["status"] = "running"
@@ -187,6 +230,7 @@ class StreamlitProgressCallback:
     def on_step_complete(self, action_id: str, step_id: int, intent: str, status):
         # Keep detail showing the last completed step
         status_val = status.value if hasattr(status, "value") else str(status)
+        emit(f"Canvas step complete {action_id} step={step_id} status={status_val}")
         if status_val == "success":
             self._action_states[action_id]["detail"] = (
                 f"✓ {intent[:60]}{'…' if len(intent) > 60 else ''}"
@@ -198,6 +242,7 @@ class StreamlitProgressCallback:
         self._write_action(action_id)
 
     def on_healing(self, action_id: str, step_id: int, message: str):
+        emit(f"Canvas healing {action_id} step={step_id} {message[:80]}")
         self._action_states[action_id]["status"] = "healing"
         self._action_states[action_id]["detail"] = f"↻ {message}"
         self._write_action(action_id)
@@ -208,6 +253,7 @@ class StreamlitProgressCallback:
 
     def on_action_complete(self, action_id: str, status, duration: float):
         status_val = status.value if hasattr(status, "value") else str(status)
+        emit(f"Canvas action complete {action_id} status={status_val} duration={duration:.1f}s")
         elapsed = f"{duration:.1f}s"
         action = self._plan_actions.get(action_id)
         short_desc = action.description[:50] + "…" if action and len(action.description) > 50 else (action.description if action else action_id)
@@ -223,6 +269,10 @@ class StreamlitProgressCallback:
         self._write_action(action_id)
 
     def on_plan_complete(self, report):
+        emit(
+            f"Canvas execution complete plan={report.plan_id} "
+            f"status={report.overall_status.value} duration={report.total_duration_seconds:.1f}s"
+        )
         status_val = report.overall_status.value
         total = report.total_duration_seconds or 0.0
         successes = sum(1 for r in report.action_results if r.status.value == "success")
@@ -295,6 +345,7 @@ def render_execution():
     """
     report = st.session_state.get("execution_report")
     pending_req_id = st.session_state.get("pending_execution")
+    execution_error = st.session_state.get("execution_error")
 
     # ── Mode B: Already completed ─────────────────────────────────────────────
     if not pending_req_id and report:
@@ -303,7 +354,11 @@ def render_execution():
 
     # ── Mode A: Active execution ──────────────────────────────────────────────
     if not pending_req_id:
-        st.info("No execution in progress. Approve a plan to start.")
+        if execution_error:
+            st.error(f"Execution did not start: {execution_error}")
+            st.caption("Fix the issue, then open the plan and click Approve & Execute again.")
+        else:
+            st.info("No execution in progress. Approve a plan to start.")
         return
 
     plan = st.session_state.get("plans", {}).get(pending_req_id)
@@ -449,7 +504,8 @@ def _run_execution(plan, req_id: str):
     """
     Pre-create placeholders, wire up the callback, run execute_plan(), then rerun.
     """
-    from execution.orchestrator import execute_plan
+    emit(f"Canvas execution start plan={plan.plan_id} req={req_id} actions={len(plan.actions)}")
+    st.session_state.execution_error = None
 
     # ── Header ────────────────────────────────────────────────────────────────
     st.markdown(
@@ -474,9 +530,7 @@ def _run_execution(plan, req_id: str):
     # ── Pre-determine methods (sync: read operation files) ────────────────────
     import json
     from pathlib import Path
-    from execution.executors.api_executor import APIExecutor
 
-    api_executor = APIExecutor()
     action_methods: Dict[str, str] = {}
 
     for action in plan.actions:
@@ -539,20 +593,20 @@ def _run_execution(plan, req_id: str):
     # ── Run the orchestrator (blocking) ──────────────────────────────────────
     try:
         st.session_state.is_processing = True
-        asyncio.run(
-            execute_plan(
-                plan_path_or_obj=plan,
-                progress_callback=callback,
-                demo_mode=True,
-                dry_run=False,
-            )
+        _run_execute_plan(
+            plan_path_or_obj=plan,
+            progress_callback=callback,
+            demo_mode=True,
+            dry_run=False,
         )
     except Exception as e:
-        # Never surface raw tracebacks to the user
+        emit(f"Execution crashed: {type(e).__name__}: {e}")
+        emit(traceback.format_exc())
+        st.session_state.execution_error = f"{type(e).__name__}: {e}"
         summary_ph.markdown(
             f"<div style='margin-top:24px; padding:16px; background:#fef2f2; "
             f"border:1px solid #fecaca; border-radius:8px; color:#ef4444; "
-            f"font-weight:600;'>✗ Execution stopped due to a connection or configuration issue.</div>",
+            f"font-weight:600;'>✗ Execution stopped: {type(e).__name__}: {e}</div>",
             unsafe_allow_html=True,
         )
         add_chat_message(
@@ -563,5 +617,5 @@ def _run_execution(plan, req_id: str):
     finally:
         st.session_state.is_processing = False
 
-    # ── Rerun to settle into completed state ──────────────────────────────────
+    # ── Rerun to settle into completed or error state ──────────────────────────────────
     st.rerun()

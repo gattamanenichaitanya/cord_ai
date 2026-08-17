@@ -12,6 +12,7 @@ from datetime import datetime
 
 from dashboard.state import add_chat_message, set_canvas_focus, store_plan, get_plan
 from dashboard.chat.intent_classifier import classify_intent, Intent
+from implement.logutil import emit
 
 
 # ─────────────────────────────────────────────
@@ -44,6 +45,7 @@ def process_pending_message():
     """
     user_message = st.session_state.pending_user_message
     st.session_state.is_processing = True
+    emit(f"Chat message received: {user_message[:120]}")
 
     try:
         # Build context
@@ -59,6 +61,10 @@ def process_pending_message():
             # Immediately show the acknowledgment
             add_chat_message("assistant", classified.acknowledgment)
             intent = classified.intent
+            emit(
+                f"Intent={intent.value} req={classified.requirement_id or classified.requirement_reference or '-'} "
+                f"artifact={classified.artifact_target or '-'} confidence={classified.confidence:.2f}"
+            )
         except Exception:
             # Claude intent classification failure
             add_chat_message("assistant", "That didn't go through — let's try again.")
@@ -221,6 +227,7 @@ def handle_plan(requirement_id: str | None, requirement_reference: str | None, f
     client = st.session_state.claude_client
     run_dir = Path(f"runs/dashboard_{req.id}_{datetime.now().strftime('%Y%m%dT%H%M%S')}")
     run_dir.mkdir(parents=True, exist_ok=True)
+    emit(f"Planning start {req.id} '{req.title}' run_dir={run_dir}")
 
     # Switch canvas to planning progress view
     set_canvas_focus("planning")
@@ -238,6 +245,8 @@ def handle_plan(requirement_id: str | None, requirement_reference: str | None, f
 
     def mark_stage(idx: int, status: str):
         st.session_state.planning_progress["stages"][idx]["status"] = status
+        label = st.session_state.planning_progress["stages"][idx]["label"]
+        emit(f"Planning stage {label} -> {status}")
 
     try:
         from planning.stages.stage_2_concept_mapping    import run_stage_2
@@ -301,14 +310,18 @@ def handle_plan(requirement_id: str | None, requirement_reference: str | None, f
             f"Done. The plan for **{req.title}** is ready. "
             f"{gap_phrase} — take a look, and hit **Approve & Execute** when you're happy.{wf_warning}"
         )
+        emit(f"Planning complete {req.id} actions={len(plan.actions)} gaps={gap_count}")
 
-    except Exception:
+    except Exception as e:
         # Mark current running stage as error
+        import traceback
+        emit(f"Planning failed {req.id}: {type(e).__name__}: {e}")
+        emit(traceback.format_exc())
         for s in st.session_state.planning_progress["stages"]:
             if s["status"] == "running":
                 s["status"] = "error"
         set_canvas_focus(f"requirements")
-        add_chat_message("assistant", "That didn't go through — let's try again.")
+        add_chat_message("assistant", f"Planning failed during HubSpot inspection: {e}")
 
 
 def handle_show(artifact_target: str | None):
@@ -394,6 +407,7 @@ def handle_inspect(question: str, inspect_object: str):
     from dashboard.chat.hubspot_qa import answer_hubspot_question
 
     try:
+        emit(f"HubSpot inspect object={inspect_object} question={question[:100]}")
         answer = answer_hubspot_question(
             question=question,
             inspect_object=inspect_object or "contacts",

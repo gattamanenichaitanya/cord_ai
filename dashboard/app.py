@@ -10,6 +10,13 @@ if str(_ROOT) not in sys.path:
 # Suppress Streamlit local_sources_watcher errors when scanning transformers
 logging.getLogger("streamlit.watcher.local_sources_watcher").setLevel(logging.ERROR)
 
+from diagnosis.logutil import configure_diagnosis_logging
+from implement.logutil import configure_implement_logging, wire_execution_loggers
+
+configure_diagnosis_logging()
+configure_implement_logging()
+wire_execution_loggers()
+
 import streamlit as st
 from dashboard.state import init_state
 from dashboard.components.styles import inject_custom_css

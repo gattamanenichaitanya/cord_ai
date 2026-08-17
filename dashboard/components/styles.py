@@ -190,6 +190,7 @@ def inject_custom_css():
         border: 1px solid #b6d4fe;
         border-radius: 0.5rem;
         padding: 1rem 1.15rem;
+        margin-bottom: 14px;
         color: #1e3a5f;
         font-size: 1rem;
         font-family: inherit;

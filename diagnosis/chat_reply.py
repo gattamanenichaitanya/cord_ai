@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 from diagnosis.chat_context import build_chat_evidence
 from diagnosis.conversations import ChatMessage
 from diagnosis.graph import SystemGraph
+from diagnosis.logutil import emit
 from diagnosis.loop import DiagnosisResult
 from diagnosis.prose import plain_user_prose
 
@@ -110,6 +111,9 @@ def answer_turn(
 ) -> ChatTurn:
     intent = classify_chat_intent(question)
     history = _history_blob(prior_messages)
+    emit(
+        f"Chat turn intent={intent.value} ticket={incident_id or 'none'} question={question[:120]}"
+    )
 
     if intent is ChatIntent.RERUN:
         if not incident_id:

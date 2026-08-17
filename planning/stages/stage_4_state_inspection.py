@@ -6,6 +6,7 @@ from typing import Dict, Any, List
 from tools.hubspot_inspector import make_request, APIError, STANDARD_OBJECTS
 from planning.claude_client import ClaudeClient
 from planning.models import ExtractedRequirement, ArchitectureDecision, Stage4Output, StateInspectionItem
+from implement.logutil import emit
 
 
 def run_stage_4(
@@ -13,6 +14,10 @@ def run_stage_4(
     architecture_decision: ArchitectureDecision,
     run_dir: Path
 ) -> Stage4Output:
+    emit(
+        f"Stage 4 start [{requirement.id}] "
+        f"object={(architecture_decision.parameters or {}).get('object_type', 'contacts')}"
+    )
     parameters = architecture_decision.parameters or {}
     inspected_items: List[StateInspectionItem] = []
 
@@ -53,22 +58,55 @@ def run_stage_4(
     seen_props = set()
 
     def add_prop(name, p_type=None, group=None):
-        if name and name not in seen_props:
+        if not isinstance(name, str) or not name.strip():
+            return
+        name = name.strip()
+        if name.startswith("hubspot."):
+            return
+        if name not in seen_props:
             seen_props.add(name)
             props_to_inspect.append({"name": name, "expected_type": p_type, "expected_group": group})
 
+    def _first_str(*values):
+        for value in values:
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+            if isinstance(value, dict):
+                nested = _first_str(
+                    value.get("internal_name"),
+                    value.get("name"),
+                    value.get("propertyName"),
+                    value.get("property"),
+                )
+                if nested:
+                    return nested
+        return None
+
     # From root parameters or payload (e.g., single property creation via API payload)
-    payload = parameters.get("payload", {})
-    root_name = parameters.get("internal_name") or parameters.get("propertyName") or parameters.get("property") or \
-                payload.get("name") or payload.get("internal_name")
-                
-    if not root_name and parameters.get("name") and ("type" in parameters or "fieldType" in parameters or "groupName" in parameters or "label" in parameters):
-        root_name = parameters.get("name")
-    
+    payload = parameters.get("payload") or {}
+    if not isinstance(payload, dict):
+        payload = {}
+    root_name = _first_str(
+        parameters.get("internal_name"),
+        parameters.get("propertyName"),
+        parameters.get("property"),
+        payload.get("name"),
+        payload.get("internal_name"),
+        parameters.get("name") if (
+            "type" in parameters or "fieldType" in parameters
+            or "groupName" in parameters or "label" in parameters
+        ) else None,
+    )
+
     if root_name:
-        p_type = parameters.get("type") or parameters.get("field_type") or parameters.get("fieldType") or \
-                 payload.get("type") or payload.get("field_type") or payload.get("fieldType")
-        p_group = parameters.get("groupName") or parameters.get("group") or payload.get("groupName") or payload.get("group")
+        p_type = _first_str(
+            parameters.get("type"), parameters.get("field_type"), parameters.get("fieldType"),
+            payload.get("type"), payload.get("field_type"), payload.get("fieldType"),
+        )
+        p_group = _first_str(
+            parameters.get("groupName"), parameters.get("group"),
+            payload.get("groupName"), payload.get("group"),
+        )
         add_prop(root_name, p_type, p_group)
 
     # Recursively find all property names in parameters
@@ -154,7 +192,7 @@ def run_stage_4(
 
     # 4. Integration checks (Slack, etc.)
     has_slack_action = False
-    for act in parameters.get("actions", []):
+    for act in parameters.get("actions") or []:
         if isinstance(act, dict) and (act.get("action_type") == "send_slack_notification" or "slack" in str(act).lower()):
             has_slack_action = True
             break
@@ -267,7 +305,7 @@ def run_stage_4(
     with open(dq_file, "w", encoding="utf-8") as f:
         json.dump(dq_details, f, indent=2)
 
-    print(f"Stage 4 [{requirement.id}]: {inspection_summary}")
+    emit(f"Stage 4 complete [{requirement.id}] {inspection_summary}")
     return output
 
 

@@ -7,11 +7,39 @@ from typing import List, Union
 
 import anthropic
 
+from implement.logutil import emit
 from execution.models import ExecutionReport, ExecutionStatus, ActionResult
 from execution.executors.api_executor import APIExecutor
 from execution.executors.ui_executor import UIExecutor
 from execution.tools.vision_locator import VisionLocator
 from planning.models import ImplementationPlan, PlanAction
+
+
+def _coerce_plan(plan_path_or_obj: Union[str, Path, ImplementationPlan, object]) -> tuple[ImplementationPlan, str]:
+    """Return a current-class ImplementationPlan.
+
+    Streamlit reloads planning.models between reruns, so session-state plans can
+    fail `isinstance(..., ImplementationPlan)` even though they are the same model.
+    """
+    if isinstance(plan_path_or_obj, ImplementationPlan):
+        return plan_path_or_obj, f"in_memory_{plan_path_or_obj.plan_id}.json"
+
+    if hasattr(plan_path_or_obj, "model_dump") and hasattr(plan_path_or_obj, "plan_id"):
+        plan = ImplementationPlan.model_validate(plan_path_or_obj.model_dump())
+        return plan, f"in_memory_{plan.plan_id}.json"
+
+    if isinstance(plan_path_or_obj, dict):
+        plan = ImplementationPlan.model_validate(plan_path_or_obj)
+        return plan, f"in_memory_{plan.plan_id}.json"
+
+    plan_path = str(plan_path_or_obj)
+    plan_file = Path(plan_path)
+    if not plan_file.exists():
+        raise FileNotFoundError(f"Plan not found: {plan_path}")
+    with open(plan_file, "r", encoding="utf-8") as f:
+        plan_data = json.load(f)
+    plan = ImplementationPlan.model_validate(plan_data)
+    return plan, plan_path
 
 
 async def execute_plan(
@@ -25,26 +53,13 @@ async def execute_plan(
     """
     Load a plan (or accept in-memory) and execute every action in dependency order.
     """
-    if isinstance(plan_path_or_obj, ImplementationPlan):
-        plan = plan_path_or_obj
-        plan_path = f"in_memory_{plan.plan_id}.json"
-    else:
-        plan_path = str(plan_path_or_obj)
-        plan_file = Path(plan_path)
-        if not plan_file.exists():
-            raise FileNotFoundError(f"Plan not found: {plan_path}")
-            
-        with open(plan_file, "r", encoding="utf-8") as f:
-            plan_data = json.load(f)
-        
-        plan = ImplementationPlan(**plan_data)
+    plan, plan_path = _coerce_plan(plan_path_or_obj)
     
     timestamp = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     run_dir = Path(f"execution_runs/{plan.plan_id}-{timestamp}")
     run_dir.mkdir(parents=True, exist_ok=True)
     
-    print(f"Loading plan: {plan_path}")
-    print(f"Plan has {len(plan.actions)} actions:")
+    emit(f"Execution start plan={plan.plan_id} actions={len(plan.actions)} run_dir={run_dir}")
     
     api_executor = APIExecutor()
     
@@ -73,9 +88,9 @@ async def execute_plan(
             if await api_executor.can_execute(op_data):
                 method_str = "API"
                 
-        print(f"  {i+1}. {action.action_id}: {action.description[:40]:<40} [{method_str}]")
+        emit(f"Plan action queued {i + 1}/{len(plan.actions)} {action.action_id} [{method_str}] {action.description[:50]}")
         
-    print()
+    emit("")
     
     results = []
     total_vision_cost = 0.0
@@ -85,8 +100,7 @@ async def execute_plan(
     for action in plan.actions:
         op_file = Path("graph/hubspot/operations") / f"{action.operation_id.split('.')[-1]}.json"
         if not op_file.exists():
-            print(f"Executing {action.action_id} (UNKNOWN)...")
-            print(f"  Warning: Operation file {op_file} not found. Skipping.")
+            emit(f"Action skip {action.action_id}: operation file missing")
             result = ActionResult(
                 action_id=action.action_id,
                 operation_id=action.operation_id,
@@ -118,19 +132,18 @@ async def execute_plan(
             executor = ui_executor
             method_label = "UI"
         else:
-            print(f"Executing {action.action_id} (UNKNOWN)...")
-            print(f"  Error: No executor can handle this operation")
+            emit(f"Action skip {action.action_id}: no executor available")
             overall_status = ExecutionStatus.FAILED
             if stop_on_failure:
                 break
             continue
             
-        print(f"Executing {action.action_id} ({method_label})...")
+        emit(f"Action start {action.action_id} ({method_label}) {action.operation_id}")
         if progress_callback and hasattr(progress_callback, "on_action_start"):
             progress_callback.on_action_start(action.action_id, action.description, method_label)
         
         if dry_run:
-            print(f"  [Dry Run] Would execute {action.operation_id} via {method_label}")
+            emit(f"Action dry-run {action.action_id} would run {action.operation_id} via {method_label}")
             result = ActionResult(
                 action_id=action.action_id,
                 operation_id=action.operation_id,
@@ -149,28 +162,26 @@ async def execute_plan(
         
         if method_label == "API":
             if result.status == ExecutionStatus.SUCCESS:
-                print("  [SUCCESS] Request successful")
-                if result.verification_result and result.verification_result.get("success"):
-                    print("  [SUCCESS] Verified")
+                emit(f"Action complete {action.action_id} API success verified={bool(result.verification_result)}")
             else:
-                print(f"  [FAILED] Failed: {result.error_message}")
+                emit(f"Action failed {action.action_id} API: {result.error_message}")
         elif method_label == "UI":
             for step in result.steps:
-                mark = "[SUCCESS]" if step.status == ExecutionStatus.SUCCESS else "[FAILED]"
-                print(f"  Step {step.step_id}: {step.intent[:50]}... {mark}")
+                mark = "ok" if step.status == ExecutionStatus.SUCCESS else "failed"
+                emit(f"  UI step {step.step_id} {mark}: {step.intent[:70]}")
             if result.status == ExecutionStatus.SUCCESS:
                 v_reason = "completed"
                 if result.verification_result:
                     v_reason = result.verification_result.get("reason", "completed")
-                print(f"  [SUCCESS] Verified: {v_reason}")
+                emit(f"Action complete {action.action_id} UI verified={v_reason}")
             else:
-                print(f"  [FAILED] Failed: {result.error_message}")
-                
-        print(f"  Duration: {result.duration_seconds:.1f}s")
+                emit(f"Action failed {action.action_id} UI: {result.error_message}")
+
+        emit(f"Action duration {action.action_id} {result.duration_seconds:.1f}s")
         if method_label == "UI":
             healing_count = sum(s.healing_attempts for s in result.steps)
-            print(f"  Healing attempts total: {healing_count}")
-        print()
+            if healing_count:
+                emit(f"Action healing {action.action_id} attempts={healing_count}")
         
         if progress_callback and hasattr(progress_callback, "on_action_complete"):
             progress_callback.on_action_complete(action.action_id, result.status, result.duration_seconds)
@@ -205,13 +216,11 @@ async def execute_plan(
     report_file = run_dir / "report.json"
     report_file.write_text(report.model_dump_json(indent=2), encoding="utf-8")
     
-    print("------------------------------------------")
-    print("Plan execution complete")
-    print(f"  Total duration: {total_duration:.1f}s")
-    print(f"  Successful actions: {success_count}/{len(plan.actions)}")
-    print(f"  Failed actions: {len(results) - success_count}")
-    print(f"  Vision API cost: ${total_vision_cost:.2f}")
-    print(f"  Report saved to: {report_file}")
+    emit(
+        f"Execution complete plan={plan.plan_id} status={overall_status.value} "
+        f"success={success_count}/{len(plan.actions)} duration={total_duration:.1f}s "
+        f"vision_cost=${total_vision_cost:.2f} report={report_file}"
+    )
     
     await ui_executor._cleanup()
     

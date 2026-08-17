@@ -22,4 +22,7 @@ plans/*
 # Ignore execution runs
 execution_runs/
 
+# Diagnosis processing log (written at runtime)
+logs/*.log
+
 

@@ -32,14 +32,19 @@ def get_headers():
     load_dotenv()
     token = os.environ.get("HUBSPOT_PRIVATE_APP_TOKEN")
     if not token:
-        print("Set HUBSPOT_PRIVATE_APP_TOKEN in .env")
-        sys.exit(1)
+        raise APIError("HUBSPOT_PRIVATE_APP_TOKEN is not set in .env")
     return {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
 def make_request(method, endpoint, params=None, json_data=None):
+    try:
+        from implement.logutil import emit
+        emit(f"HubSpot API {method} {endpoint}")
+    except ImportError:
+        pass
+
     url = f"{BASE_URL}{endpoint}"
     headers = get_headers()
     

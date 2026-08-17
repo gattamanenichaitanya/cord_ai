@@ -3,6 +3,7 @@ from pathlib import Path
 from dashboard.state import add_chat_message
 from dashboard.chat.handlers import handle_user_message, process_pending_message
 from planning.document_loader import load_document
+from implement.logutil import emit
 
 
 def render_chat(is_empty_state=False):
@@ -84,6 +85,7 @@ def render_chat(is_empty_state=False):
                 try:
                     doc = load_document(str(temp_file_path))
                     st.session_state.document = doc
+                    emit(f"Document loaded '{doc.title}' sections={doc.section_count} path={temp_file_path}")
                     st.session_state.chat_history = []
                     st.session_state.current_chat_title = doc.title
                     

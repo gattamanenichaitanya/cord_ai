@@ -26,6 +26,9 @@ def init_state():
     if "pending_execution" not in st.session_state:
         st.session_state.pending_execution = None
 
+    if "execution_error" not in st.session_state:
+        st.session_state.execution_error = None
+
     if "pending_user_message" not in st.session_state:
         st.session_state.pending_user_message = None
 

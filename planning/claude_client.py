@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError
 import anthropic
 
+from implement.logutil import emit
+
 T = TypeVar("T", bound=BaseModel)
 
 class ClaudeClient:
@@ -63,7 +65,10 @@ class ClaudeClient:
                 self.total_input_tokens += input_tokens
                 self.total_output_tokens += output_tokens
 
-                print(f"Claude call: model={target_model}, input={input_tokens} tokens, output={output_tokens} tokens, latency={latency:.2f}s")
+                emit(
+                    f"Claude structured call model={target_model} "
+                    f"input={input_tokens} output={output_tokens} latency={latency:.2f}s"
+                )
 
                 tool_use_block = None
                 for block in response.content:
@@ -85,7 +90,7 @@ class ClaudeClient:
 
             except (anthropic.RateLimitError, anthropic.APIStatusError, anthropic.APIConnectionError, ValidationError, ValueError) as e:
                 latency = time.time() - start_time
-                print(f"[Attempt {attempt+1}/{retries}] Error during Claude call ({type(e).__name__}): {e}")
+                emit(f"Claude call error attempt={attempt + 1}/{retries} ({type(e).__name__}): {e}")
                 if attempt == retries - 1:
                     raise e
                 time.sleep(delay)
@@ -98,10 +103,18 @@ class ClaudeClient:
         if system_prompt:
             kwargs["system"] = system_prompt
         
+        start_time = time.time()
         response = self.client.messages.create(**kwargs)
-        self.total_input_tokens += response.usage.input_tokens
-        self.total_output_tokens += response.usage.output_tokens
-        
+        latency = time.time() - start_time
+        input_tokens = response.usage.input_tokens
+        output_tokens = response.usage.output_tokens
+        self.total_input_tokens += input_tokens
+        self.total_output_tokens += output_tokens
+        emit(
+            f"Claude text call model={target_model} "
+            f"input={input_tokens} output={output_tokens} latency={latency:.2f}s"
+        )
+
         text_blocks = [b.text for b in response.content if b.type == "text"]
         return "".join(text_blocks)
 

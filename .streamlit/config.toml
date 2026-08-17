@@ -1,2 +1,3 @@
 [server]
-folderWatchBlacklist = ['.venv']
+folderWatchBlacklist = ['.venv', 'logs', 'runs', 'execution_runs', 'scratch', 'plans']
+

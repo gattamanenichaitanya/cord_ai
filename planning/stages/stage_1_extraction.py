@@ -6,6 +6,7 @@ from typing import Counter
 from planning.claude_client import ClaudeClient
 from planning.document_loader import DocumentInput, load_document
 from planning.models import Stage1Output, ExtractedRequirement
+from implement.logutil import emit
 
 
 class StageOutputWarning(Exception):
@@ -18,6 +19,7 @@ def run_stage_1(
     client: ClaudeClient,
     run_dir: Path
 ) -> Stage1Output:
+    emit(f"Stage 1 start document='{document.title}' sections={document.section_count}")
     project_root = Path(__file__).resolve().parent.parent.parent
     prompt_path = project_root / "planning" / "prompts" / "stage_1_extraction.txt"
     
@@ -57,7 +59,10 @@ def run_stage_1(
     cost_info = client.get_cost_summary()
     cost_str = f"${cost_info['estimated_cost_usd']:.4f}"
 
-    print(f"\nStage 1: Extracted {len(output.requirements)} requirements across {document.section_count} sections. Types: {type_counts}. Cost: {cost_str}")
+    emit(
+        f"Stage 1 complete requirements={len(output.requirements)} "
+        f"sections={document.section_count} types={dict(type_counts)} cost={cost_str}"
+    )
     return output
 
 

@@ -35,11 +35,18 @@ def render_artifact_selector():
                 target_focus = "requirements"
             else:
                 req_id = tab_label.split()[0]
-                is_active = (focus == f"plan:{req_id}" or (focus == "execution" and st.session_state.get("execution_report") and st.session_state.execution_report.plan_id == req_id))
+                pending_req = st.session_state.get("pending_execution")
+                report = st.session_state.get("execution_report")
+                is_active = (
+                    focus == f"plan:{req_id}"
+                    or (focus == "execution" and pending_req == req_id)
+                    or (focus == "execution" and report and str(report.plan_id).startswith(req_id))
+                )
                 target_focus = f"plan:{req_id}"
                 
             btn_type = "primary" if is_active else "secondary"
-            if st.button(tab_label, key=f"tab_btn_{tab_label}", type=btn_type):
+            executing = st.session_state.get("pending_execution") is not None
+            if st.button(tab_label, key=f"tab_btn_{tab_label}", type=btn_type, disabled=executing):
                 st.session_state.canvas_focus = target_focus
                 st.rerun()
                 

@@ -4,6 +4,7 @@ import asyncio
 from pathlib import Path
 
 from execution.orchestrator import execute_plan
+from implement.logutil import configure_implement_logging, wire_execution_loggers
 
 def main():
     parser = argparse.ArgumentParser(description="CLI entry point for running a HubSpot plan execution (Day 5)")
@@ -13,6 +14,9 @@ def main():
     parser.add_argument("--continue-on-failure", action="store_false", dest="stop_on_failure", help="Continue past failures (opposite)")
     parser.add_argument("--model", type=str, default="claude-sonnet-4-6", help="Vision model for self-healing (default sonnet-4-6)")
     args = parser.parse_args()
+
+    configure_implement_logging()
+    wire_execution_loggers()
 
     asyncio.run(execute_plan(
         plan_path=args.plan_path,

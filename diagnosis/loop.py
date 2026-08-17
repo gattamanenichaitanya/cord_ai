@@ -12,6 +12,7 @@ from diagnosis.expectations import ExpectationResult, evaluate_expectations, vio
 from diagnosis.fault import FaultEvidence, assess_workflow_fault, _adjacent_fields
 from diagnosis.graph import SystemGraph, load_graph
 from diagnosis.incidents import get_incident
+from diagnosis.logutil import configure_diagnosis_logging, emit
 from diagnosis.neighborhood import build_candidate_actions
 from diagnosis.ontology import EdgeType
 from diagnosis.parser import TicketParse, parse_incident, parse_ticket
@@ -110,6 +111,8 @@ def diagnose(
     state = runtime or get_runtime(record_id)
     overlay_id = rules_incident_id if rules_incident_id is not None else incident_id
     system = graph or load_graph()
+    configure_diagnosis_logging()
+    emit(f"Start diagnosis incident={incident_id} deal={record_id}")
 
     expectation_results = evaluate_expectations(state)
     trace: list[dict[str, Any]] = [
@@ -124,6 +127,7 @@ def diagnose(
                 reason="No validated policy/runtime discrepancy; causal traversal did not start.",
             )
         )
+        emit("No validated anomaly; skipping graph walk")
         return DiagnosisResult(
             status="no_anomaly",
             root_cause_node=None,
@@ -228,6 +232,10 @@ def diagnose(
                 candidates=candidates,
             )
             _validate_inspect(system, action)
+            emit(
+                f"Hop {hop_count + 1} planner={planner_calls} current={current} "
+                f"action={action.action_type} target={action.target_node_id}"
+            )
         except InvalidActionError as exc:
             trace.append(
                 stop_event(
@@ -299,6 +307,7 @@ def diagnose(
                     recommendation=recommendation,
                 )
             )
+            emit(f"Diagnosed incident={incident_id} root_cause={rca} hops={hop_count}")
             return DiagnosisResult(
                 status="diagnosed",
                 root_cause_node=rca,
@@ -370,6 +379,7 @@ def diagnose(
             )
 
     reason = "No sufficiently supported causal explanation found within the investigation budget."
+    emit(f"Stopped without RCA incident={incident_id} hops={hop_count} planner_calls={planner_calls}")
     trace.append(stop_event(status="needs_human", root_cause_node=None, reason=reason))
     return DiagnosisResult(
         status="needs_human",

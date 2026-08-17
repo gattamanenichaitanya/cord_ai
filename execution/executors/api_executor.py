@@ -1,6 +1,7 @@
 import os
 import json
 import asyncio
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, Optional
@@ -11,6 +12,8 @@ from dotenv import load_dotenv
 from planning.models import PlanAction
 from execution.models import ActionResult, ExecutionStatus, ExecutionMethodUsed, ExecutionStep
 from execution.executors.base import ExecutorBase
+
+logger = logging.getLogger("APIExecutor")
 
 
 class APIExecutor(ExecutorBase):
@@ -38,6 +41,92 @@ class APIExecutor(ExecutorBase):
             if m.get("method") == "api" and m.get("preference_rank", 0) >= 1:
                 return True
         return False
+
+    @staticmethod
+    def _format_options(raw_options) -> list:
+        formatted = []
+        for idx, opt in enumerate(raw_options or []):
+            if isinstance(opt, dict):
+                formatted.append({
+                    "label": opt.get("label"),
+                    "value": opt.get("value"),
+                    "displayOrder": opt.get("displayOrder", idx),
+                    "hidden": opt.get("hidden", False),
+                })
+            elif isinstance(opt, str):
+                formatted.append({
+                    "label": opt,
+                    "value": opt,
+                    "displayOrder": idx,
+                    "hidden": False,
+                })
+        return formatted
+
+    def _build_property_payload(self, params: Dict[str, Any], name: str) -> Dict[str, Any]:
+        """Map planner parameters to HubSpot's Properties API body."""
+        requested_field = str(
+            params.get("fieldType")
+            or params.get("field_type")
+            or params.get("type")
+            or "text"
+        ).lower()
+        requested_type = str(params.get("type") or "").lower()
+
+        type_map = {
+            "number": ("number", "number"),
+            "text": ("string", "text"),
+            "string": ("string", "text"),
+            "textarea": ("string", "textarea"),
+            "dropdown": ("enumeration", "select"),
+            "select": ("enumeration", "select"),
+            "radio": ("enumeration", "radio"),
+            "checkbox": ("enumeration", "checkbox"),
+            "date": ("date", "date"),
+            "datetime": ("datetime", "date"),
+            "booleancheckbox": ("bool", "booleancheckbox"),
+            "bool": ("bool", "booleancheckbox"),
+            "enumeration": ("enumeration", "select"),
+        }
+
+        is_hubspot_user = requested_field in {"user", "hubspotuser", "hubspot_user", "owner"} or str(
+            params.get("referencedObjectType") or ""
+        ).upper() == "OWNER"
+
+        if is_hubspot_user:
+            t_val, ft_val = "enumeration", "select"
+        else:
+            t_val, ft_val = type_map.get(requested_field, ("string", "text"))
+            if requested_type == "enumeration":
+                t_val = "enumeration"
+                if requested_field not in {"select", "radio", "checkbox"}:
+                    ft_val = params.get("fieldType") or "select"
+
+        payload = {
+            "name": name,
+            "label": params.get("property_label") or params.get("label") or name,
+            "type": t_val,
+            "fieldType": ft_val,
+            "groupName": params.get("group_name") or params.get("groupName") or "contactinformation",
+        }
+
+        if params.get("description"):
+            payload["description"] = params["description"]
+        if "formField" in params:
+            payload["formField"] = params["formField"]
+
+        if is_hubspot_user:
+            # HubSpot User fields are enumeration/select backed by portal owners.
+            # Options come from the owners API; empty options 400, and HubSpot
+            # requires externalOptions=true plus formField=false.
+            payload["referencedObjectType"] = params.get("referencedObjectType") or "OWNER"
+            payload["externalOptions"] = True
+            payload["formField"] = False
+            return payload
+
+        if payload["type"] == "enumeration" or payload["fieldType"] in {"select", "radio", "checkbox"}:
+            if "options" in params:
+                payload["options"] = self._format_options(params.get("options"))
+        return payload
 
     async def execute(
         self,
@@ -108,50 +197,13 @@ class APIExecutor(ExecutorBase):
         # 4. Payload Mapping for hubspot.create_custom_property
         payload = {}
         if action.operation_id == "hubspot.create_custom_property":
-            field_type = params.get("field_type") or params.get("type") or "text"
-
-            type_map = {
-                "number": ("number", "number"),
-                "text": ("string", "text"),
-                "textarea": ("string", "textarea"),
-                "dropdown": ("enumeration", "select"),
-                "date": ("date", "date"),
-                "datetime": ("datetime", "date"),
-                "booleancheckbox": ("bool", "booleancheckbox")
-            }
-
-            t_val, ft_val = type_map.get(field_type, ("string", "text"))
-
-            payload = {
-                "name": name,
-                "label": params.get("property_label") or params.get("label") or name,
-                "type": params.get("type") or t_val,
-                "fieldType": params.get("fieldType") or ft_val,
-                "groupName": params.get("group_name") or params.get("groupName") or "contactinformation"
-            }
-
-            if "description" in params:
-                payload["description"] = params["description"]
-
-            if (ft_val == "select" or payload["type"] == "enumeration") and "options" in params:
-                raw_options = params.get("options", [])
-                formatted_options = []
-                for idx, opt in enumerate(raw_options):
-                    if isinstance(opt, dict):
-                        formatted_options.append({
-                            "label": opt.get("label"),
-                            "value": opt.get("value"),
-                            "displayOrder": opt.get("displayOrder", idx),
-                            "hidden": opt.get("hidden", False)
-                        })
-                    elif isinstance(opt, str):
-                        formatted_options.append({
-                            "label": opt,
-                            "value": opt,
-                            "displayOrder": idx,
-                            "hidden": False
-                        })
-                payload["options"] = formatted_options
+            payload = self._build_property_payload(params, name)
+            logger.info(
+                f"API property payload action={action.action_id} "
+                f"type={payload.get('type')} fieldType={payload.get('fieldType')} "
+                f"referencedObjectType={payload.get('referencedObjectType')} "
+                f"options={len(payload.get('options') or [])}"
+            )
         else:
             # Default fallback: pass action parameters directly as payload
             payload = action.parameters.get("payload") if isinstance(action.parameters.get("payload"), dict) else action.parameters
@@ -163,6 +215,8 @@ class APIExecutor(ExecutorBase):
         
         step_start = datetime.now()
         step_status = ExecutionStatus.IN_PROGRESS
+
+        logger.info(f"API request {http_method} {url} action={action.action_id} operation={action.operation_id}")
 
         for attempt in range(2):
             try:
@@ -195,7 +249,7 @@ class APIExecutor(ExecutorBase):
 
                 if status_code >= 500:
                     if attempt == 0:
-                        print(f"[Warning] 5xx Server Error ({status_code}) on {action.action_id}. Retrying in 2 seconds...")
+                        logger.warning(f"API 5xx {status_code} on {action.action_id}; retrying in 2s")
                         await asyncio.sleep(2)
                         continue
                 break
@@ -207,10 +261,12 @@ class APIExecutor(ExecutorBase):
                     "response": {"error": str(e)}
                 }
                 if attempt == 0:
-                    print(f"[Warning] Network error ({e}) on {action.action_id}. Retrying in 2 seconds...")
+                    logger.warning(f"API network error on {action.action_id}: {e}; retrying in 2s")
                     await asyncio.sleep(2)
                     continue
                 break
+
+        logger.info(f"API response {status_code} action={action.action_id}")
 
         step_end = datetime.now()
 
@@ -218,7 +274,7 @@ class APIExecutor(ExecutorBase):
         error_msg = None
         
         if status_code == 409 or (status_code == 400 and "already exists" in str(response_body).lower()):
-            print(f"[Info] Conflict (409/400) detected for {name}. Checking schema match for conflict resolution...")
+            logger.info(f"API conflict check for property={name} action={action.action_id}")
             try:
                 check_url = f"{self.base_url}/crm/v3/properties/{object_type}/{name}"
                 check_resp = await asyncio.to_thread(
@@ -248,19 +304,19 @@ class APIExecutor(ExecutorBase):
                                 break
                                 
                     if type_matches and options_match:
-                        print(f"[Info] Conflict resolved: Existing property '{name}' matches the expected schema.")
+                        logger.info(f"API conflict resolved property={name} schema match")
                         status_code = 200
                         response_body = existing_prop
                     else:
-                        print(f"[Warning] Property '{name}' already exists but schema differs slightly. Treating as success for demo purposes.")
+                        logger.warning(f"API conflict property={name} schema differs; treating as success")
                         status_code = 200
                         response_body = existing_prop
                 else:
-                    print(f"[Warning] Property '{name}' already exists but schema fetch returned status {check_resp.status_code}. Treating as success for demo purposes.")
+                    logger.warning(f"API conflict property={name} schema fetch status={check_resp.status_code}")
                     status_code = 200
                     response_body = {"name": name}
             except Exception as check_err:
-                print(f"[Warning] Property '{name}' already exists but schema verification check failed: {check_err}. Treating as success for demo purposes.")
+                logger.warning(f"API conflict check failed property={name}: {check_err}")
                 status_code = 200
                 response_body = {"name": name}
         
@@ -294,6 +350,7 @@ class APIExecutor(ExecutorBase):
                 .replace("{name}", name)
             )
             v_url = f"{self.base_url}{v_url_path}"
+            logger.info(f"API verify {v_http_method} {v_url} action={action.action_id}")
 
             try:
                 v_resp = await asyncio.to_thread(
